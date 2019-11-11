@@ -5,9 +5,10 @@ from songs import views
 
 
 router = routers.DefaultRouter()
-router.register(r'users', views.UserViewSet)
-router.register(r'groups', views.GroupViewSet)
+router.register(r'users', views.UserProfileViewSet)
 router.register(r'songs', views.SongViewSet)
+router.register(r'playlists', views.PlaylistViewSet)
+router.register(r'albums', views.AlbumViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),

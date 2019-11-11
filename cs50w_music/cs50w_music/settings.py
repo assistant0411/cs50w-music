@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'rest_framework',
     'songs',
+    'django_countries',
 ]
 
 MIDDLEWARE = [
@@ -131,3 +132,5 @@ REST_FRAMEWORK = {
 
 MEDIA_ROOT = BASE_DIR / "media"  # Specify the directory where media files are stored on your server.
 #MEDIA_URL = '/media/'
+
+AUTH_USER_MODEL = 'songs.UserProfile'
