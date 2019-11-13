@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 GENRE_CHOICES = ['rap', 'pop', 'rock']
 
 
-class UserProfile(AbstractUser):
+class User(AbstractUser):
     birth_date = models.DateField(null=True, blank=True)
     country = CountryField(null=True, blank=True)
 
@@ -27,7 +27,7 @@ class UserProfile(AbstractUser):
 
 class Album(models.Model):
     title = models.CharField(max_length=255)
-    artist = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="albums")
+    artist = models.ForeignKey(User, on_delete=models.CASCADE, related_name="albums")
     release = models.DateTimeField(null=True, blank=True, default=timezone.now)
 
     class Meta:
@@ -51,7 +51,7 @@ class Song(models.Model):
     title = models.CharField(max_length=255)
     audio_file = models.FileField(upload_to='songs/', validators=[validate_audio_file])
     release = models.DateTimeField(null=True, blank=True, default=timezone.now)
-    performers = models.ManyToManyField(UserProfile, related_name="songs")
+    performers = models.ManyToManyField(User, related_name="songs")
     genre = models.CharField(max_length=20, blank=True, null=True, choices=[(g, g) for g in GENRE_CHOICES])
     album = models.ForeignKey(Album, blank=True, null=True, on_delete=models.SET_NULL, related_name="songs")
     duration = models.PositiveIntegerField (blank=True, null=True)
@@ -72,7 +72,7 @@ class Song(models.Model):
 class Playlist(models.Model):
     title = models.CharField(max_length=255)
     songs = models.ManyToManyField(Song, blank=True, related_name="playlists")
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="playlists")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="playlists")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

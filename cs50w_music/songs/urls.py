@@ -6,7 +6,7 @@ from songs import views
 app_name = 'songs'
 
 router = DefaultRouter()
-router.register(r'users', views.UserProfileViewSet)
+router.register(r'users', views.UserViewSet)
 router.register(r'songs', views.SongViewSet)
 router.register(r'playlists', views.PlaylistViewSet)
 router.register(r'albums', views.AlbumViewSet)

@@ -1,12 +1,12 @@
 from django.utils import timezone
 from rest_framework import serializers
-from .models import UserProfile, Song, Playlist, Album
+from .models import User, Song, Playlist, Album
 from django_countries.serializers import CountryFieldMixin
 
 
-class UserProfileSerializer(CountryFieldMixin, serializers.ModelSerializer):
+class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
     class Meta:
-        model = UserProfile
+        model = User
         fields = '__all__'
 
 

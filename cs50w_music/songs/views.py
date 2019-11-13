@@ -2,15 +2,15 @@ from rest_framework import viewsets, permissions
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
-from songs.models import UserProfile, Song, Playlist, Album
-from songs.serializers import UserProfileSerializer, SongSerializer, PlaylistSerializer, AlbumSerializer
+from songs.models import User, Song, Playlist, Album
+from songs.serializers import UserSerializer, SongSerializer, PlaylistSerializer, AlbumSerializer
 
-class UserProfileViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows UserProfiles to be viewed or edited.
+    API endpoint that allows Users to be viewed or edited.
     """
-    queryset = UserProfile.objects.all().order_by('-date_joined')
-    serializer_class = UserProfileSerializer
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
