@@ -48,7 +48,7 @@ class SongViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Songs to be viewed or edited.
     """
-    queryset = Song.objects.all().order_by('-release')
+    queryset = Song.objects.all().order_by('-release_date')
     serializer_class = SongSerializer
     permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
 
@@ -74,7 +74,7 @@ class AlbumViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Albums to be viewed or edited.
     """
-    queryset = Album.objects.all().order_by('-release')
+    queryset = Album.objects.all().order_by('-release_date')
     serializer_class = AlbumSerializer
     permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
 

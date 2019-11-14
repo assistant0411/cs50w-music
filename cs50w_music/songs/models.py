@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django_countries.fields import CountryField
 from django.utils import timezone
 from django.core.validators import MaxValueValidator, FileExtensionValidator
+from datetime import date
 
 
 GENRE_CHOICES = ['rap', 'pop', 'rock']
@@ -19,7 +20,7 @@ class User(AbstractUser):
 class Album(models.Model):
     title = models.CharField(max_length=255)
     artists = models.ManyToManyField(User, related_name="albums", blank=True)
-    release = models.DateTimeField(null=True, blank=True, default=timezone.now, validators=[MaxValueValidator(limit_value=timezone.now)])
+    release_date = models.DateField(null=True, blank=True, default=date.today, validators=[MaxValueValidator(limit_value=date.today)])
 
     def __str__(self):
         return f"Album '{self.title}' by {', '.join([str(artist) for artist in self.artists.all()])}"
@@ -28,7 +29,7 @@ class Album(models.Model):
 class Song(models.Model):
     title = models.CharField(max_length=255)
     audio_file = models.FileField(upload_to='songs/', validators=[FileExtensionValidator(allowed_extensions=['mp3', 'wav', 'ogg'])])
-    release = models.DateTimeField(null=True, blank=True, default=timezone.now, validators=[MaxValueValidator(limit_value=timezone.now)])
+    release_date = models.DateField(null=True, blank=True, default=date.today, validators=[MaxValueValidator(limit_value=date.today)])
     artists = models.ManyToManyField(User, related_name="songs", blank=True)
     genre = models.CharField(max_length=20, blank=True, null=True, choices=[(g, g) for g in GENRE_CHOICES])
     album = models.ForeignKey(Album, blank=True, null=True, on_delete=models.SET_NULL, related_name="songs")
