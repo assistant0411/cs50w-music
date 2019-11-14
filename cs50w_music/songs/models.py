@@ -27,7 +27,6 @@ class Album(models.Model):
         return f"Album '{self.title}' by {', '.join([str(artist) for artist in self.artists.all()])}"
 
 
-
 def validate_audio_file(value):
     try:
         content_type = value.content_type
@@ -38,7 +37,6 @@ def validate_audio_file(value):
 
     if content_type != 'audio/mpeg':
         raise ValidationError("Invalid file type. Only 'audio/mpeg' files are accepted.")
-
 
 
 class Song(models.Model):

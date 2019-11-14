@@ -45,7 +45,7 @@ class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
         fields = ('id', 'username', 'first_name', 'last_name', 'country', 'birth_date')
 
 
-class SerializerMixinWithValidation(metaclass=serializers.SerializerMetaclass):
+class SongAndAlbumMixinWithValidation(metaclass=serializers.SerializerMetaclass):
     artists = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), many=True, required=False)
 
     def validate(self, data):
@@ -68,16 +68,13 @@ class SerializerMixinWithValidation(metaclass=serializers.SerializerMetaclass):
         return instance
 
 
-
-
-
-class SongSerializer(SerializerMixinWithValidation, serializers.ModelSerializer):
+class SongSerializer(SongAndAlbumMixinWithValidation, serializers.ModelSerializer):
     class Meta:
         model = Song
         fields = '__all__'
 
 
-class AlbumSerializer(SerializerMixinWithValidation, serializers.ModelSerializer):
+class AlbumSerializer(SongAndAlbumMixinWithValidation, serializers.ModelSerializer):
     class Meta:
         model = Album
         fields = '__all__'
