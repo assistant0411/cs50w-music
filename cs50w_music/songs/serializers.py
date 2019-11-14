@@ -3,7 +3,7 @@ from rest_framework import serializers
 from .models import User, Song, Playlist, Album
 from django_countries.serializers import CountryFieldMixin
 from django.contrib.auth import authenticate
-from django.contrib.auth.password_validation import validate_password, ValidationError as PasswordValidationError
+from django.contrib.auth.password_validation import validate_password
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -45,36 +45,13 @@ class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
         fields = ('id', 'username', 'first_name', 'last_name', 'country', 'birth_date')
 
 
-class SongAndAlbumMixinWithValidation(metaclass=serializers.SerializerMetaclass):
-    artists = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), many=True, required=False)
-
-    def validate(self, data):
-        release = data.get('release')
-        if release and release > timezone.now():
-            raise serializers.ValidationError("The release date cannot be in the future.")
-        return data
-
-    def create(self, validated_data):
-        curr_user = self.context['request'].user
-        additional_artists = validated_data.pop('artists', [])
-
-        instance = self.Meta.model.objects.create(**validated_data)
-
-        instance.artists.add(curr_user)
-
-        for artist in additional_artists:
-            instance.artists.add(artist)
-
-        return instance
-
-
-class SongSerializer(SongAndAlbumMixinWithValidation, serializers.ModelSerializer):
+class SongSerializer(serializers.ModelSerializer):
     class Meta:
         model = Song
         fields = '__all__'
 
 
-class AlbumSerializer(SongAndAlbumMixinWithValidation, serializers.ModelSerializer):
+class AlbumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Album
         fields = '__all__'

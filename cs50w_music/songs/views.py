@@ -51,6 +51,11 @@ class SongViewSet(viewsets.ModelViewSet):
     queryset = Song.objects.all().order_by('-release')
     serializer_class = SongSerializer
     permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
+
+    def perform_create(self, serializer):
+        # Save the album and then add the current user to the owners
+        song = serializer.save()
+        song.artists.add(self.request.user)
     
 
 class PlaylistViewSet(viewsets.ModelViewSet):
@@ -72,6 +77,11 @@ class AlbumViewSet(viewsets.ModelViewSet):
     queryset = Album.objects.all().order_by('-release')
     serializer_class = AlbumSerializer
     permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
+
+    def perform_create(self, serializer):
+        # Save the album and then add the current user to the owners
+        album = serializer.save()
+        album.artists.add(self.request.user)
 
 
 class PlaySongView(APIView):
