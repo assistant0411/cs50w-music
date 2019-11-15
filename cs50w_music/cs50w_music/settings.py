@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'songs',
     'django_countries',
     'knox',
+    'django_cleanup.apps.CleanupConfig', # Automatically delete files for FileField. Needs to be last in the installed apps list.
 ]
 
 MIDDLEWARE = [
