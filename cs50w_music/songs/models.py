@@ -19,7 +19,7 @@ class User(AbstractUser):
 
 class Album(models.Model):
     title = models.CharField(max_length=255)
-    artists = models.ManyToManyField(User, related_name="albums", blank=True)
+    artists = models.ManyToManyField(User, related_name="albums", blank=True)  # blank because request.user is added to the artists in the view
     release_date = models.DateField(null=True, blank=True, default=date.today, validators=[MaxValueValidator(limit_value=date.today)])
 
     def __str__(self):
@@ -30,7 +30,7 @@ class Song(models.Model):
     title = models.CharField(max_length=255)
     audio_file = models.FileField(upload_to='songs/', validators=[FileExtensionValidator(allowed_extensions=['mp3', 'wav', 'ogg'])])
     release_date = models.DateField(null=True, blank=True, default=date.today, validators=[MaxValueValidator(limit_value=date.today)])
-    artists = models.ManyToManyField(User, related_name="songs", blank=True)
+    artists = models.ManyToManyField(User, related_name="songs", blank=True)  # blank because request.user is added to the artists in the view
     genre = models.CharField(max_length=20, blank=True, null=True, choices=[(g, g) for g in GENRE_CHOICES])
     album = models.ForeignKey(Album, blank=True, null=True, on_delete=models.SET_NULL, related_name="songs")
     duration = models.PositiveIntegerField (blank=True, null=True)

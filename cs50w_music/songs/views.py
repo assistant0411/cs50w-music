@@ -53,7 +53,7 @@ class SongViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
 
     def perform_create(self, serializer):
-        # Save the album and then add the current user to the owners
+        # Save the album and then add the current user to the artists
         song = serializer.save()
         song.artists.add(self.request.user)
     
@@ -79,7 +79,7 @@ class AlbumViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
 
     def perform_create(self, serializer):
-        # Save the album and then add the current user to the owners
+        # Save the album and then add the current user to the artists
         album = serializer.save()
         album.artists.add(self.request.user)
 
