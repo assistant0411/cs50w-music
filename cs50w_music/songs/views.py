@@ -8,6 +8,11 @@ from rest_framework.response import Response
 from knox.models import AuthToken
 from rest_framework import filters
 from .permissions import IsArtistOrReadOnly, IsPlaylistOwnerOrReadOnly
+from django.shortcuts import render
+
+
+def index(request):
+    return render(request, "songs/index.html")
 
 
 class RegistrationAPI(generics.GenericAPIView):
@@ -21,7 +26,7 @@ class RegistrationAPI(generics.GenericAPIView):
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
             "token": AuthToken.objects.create(user)[1]
         })
-    
+
 
 class LoginAPI(generics.GenericAPIView):
     serializer_class = LoginUserSerializer

@@ -14,10 +14,11 @@ router.register(r'users', views.UserViewSet, basename='users')
 
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('songs/<int:song_id>/play/', views.PlaySongView.as_view(), name='play-song'),
-    path('register/', views.RegistrationAPI.as_view(), name='user-register'),
-    path('login/', views.LoginAPI.as_view(), name='user-login'),
-    path('logout/', knox_views.LogoutView.as_view(), name='knox-logout'),
-    path('logoutall/',knox_views.LogoutAllView.as_view(), name='knox-logout-all'),
+    path('', views.index, name="index"),
+    path('api/', include(router.urls)),
+    path('api/songs/<int:song_id>/play/', views.PlaySongView.as_view(), name='play-song'),
+    path('api/register/', views.RegistrationAPI.as_view(), name='user-register'),
+    path('api/login/', views.LoginAPI.as_view(), name='user-login'),
+    path('api/logout/', knox_views.LogoutView.as_view(), name='knox-logout'),
+    path('api/logoutall/',knox_views.LogoutAllView.as_view(), name='knox-logout-all'),
 ]
