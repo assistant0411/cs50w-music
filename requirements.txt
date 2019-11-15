@@ -1,4 +1,4 @@
 django
 djangorestframework
-django-knox
+django-rest-knox
 django_countries
