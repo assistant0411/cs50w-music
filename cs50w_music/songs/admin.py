@@ -32,12 +32,12 @@ class SongAdmin(admin.ModelAdmin):
 admin.site.register(Song, SongAdmin)
 
 
-class AlbumSongInline(admin.TabularInline):
-    model = Song
-    extra = 0
+#class AlbumSongInline(admin.TabularInline):
+#    model = Song
+#    extra = 0
 
 class AlbumAdmin(admin.ModelAdmin):
-    inlines = (AlbumSongInline,)
+    #inlines = (AlbumSongInline,)
     filter_horizontal = ("artists", )
 
 admin.site.register(Album, AlbumAdmin)
