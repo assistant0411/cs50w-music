@@ -177,3 +177,5 @@ media/
 *.log
 log/
 logs/
+
+temp.py

@@ -10,7 +10,7 @@ GENRE_CHOICES = ['rap', 'pop', 'rock']
 
 
 class User(AbstractUser):
-    birth_date = models.DateField(null=True, blank=True)
+    birth_date = models.DateField(null=True, blank=True, validators=[MaxValueValidator(limit_value=date.today)])
     country = CountryField(null=True, blank=True)
 
     def __str__(self):
