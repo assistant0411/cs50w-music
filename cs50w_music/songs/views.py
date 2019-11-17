@@ -7,7 +7,7 @@ from .serializers import UserSerializer, CreateUserSerializer, LoginUserSerializ
 from rest_framework.response import Response
 from knox.models import AuthToken
 from rest_framework import filters
-from .permissions import IsArtistOrReadOnly, IsPlaylistOwnerOrReadOnly
+from .permissions import IsArtistOrReadOnly, IsPlaylistOwnerOrReadOnly, IsUserOrReadOnly
 from django.shortcuts import render
 from rest_framework import status
 
@@ -42,12 +42,15 @@ class LoginAPI(generics.GenericAPIView):
         })
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = User.objects.all()
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by('username')
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsUserOrReadOnly]
     filter_backends = [filters.SearchFilter]
     search_fields = ['username']
+
+    def create(self, request, *args, **kwargs):
+        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class SongViewSet(viewsets.ModelViewSet):
