@@ -3,13 +3,14 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from .models import User, Song, Playlist, Album
-from .serializers import UserSerializer, CreateUserSerializer, LoginUserSerializer, SongSerializer, PlaylistSerializer, AlbumSerializer
+from .serializers import UserSerializer, CreateUserSerializer, LoginUserSerializer, SongSerializer, PlaylistSerializer, AlbumSerializer, UpdateUserSerializer
 from rest_framework.response import Response
 from knox.models import AuthToken
 from rest_framework import filters
 from .permissions import IsArtistOrReadOnly, IsPlaylistOwnerOrReadOnly, IsUserOrReadOnly
 from django.shortcuts import render
 from rest_framework import status
+from django.contrib.auth.hashers import check_password, make_password
 
 
 def index(request):
@@ -51,6 +52,16 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = UpdateUserSerializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        self.perform_update(serializer)
+
+        return Response(serializer.data)
 
 
 class SongViewSet(viewsets.ModelViewSet):

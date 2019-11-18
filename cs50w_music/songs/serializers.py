@@ -4,6 +4,7 @@ from .models import User, Song, Playlist, Album
 from django_countries.serializers import CountryFieldMixin
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.hashers import check_password
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
@@ -27,6 +28,29 @@ class CreateUserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
+
+class UpdateUserSerializer(CreateUserSerializer):
+    old_password = serializers.CharField(write_only=True)
+
+    class Meta(CreateUserSerializer.Meta):
+        fields = CreateUserSerializer.Meta.fields + ('old_password',)
+        #extra_kwargs = {field: {'required': False} for field in fields}
+
+    def validate_old_password(self, value):
+        user = self.instance
+        if not check_password(value, user.password):
+            raise serializers.ValidationError("Old password is incorrect")
+        return value
+
+    def validate(self, data):
+        data = super().validate(data)
+        old_password = data.get('old_password')
+
+        if not old_password:
+            raise serializers.ValidationError("Old password is required")
+
+        return data
+    
 
 class LoginUserSerializer(serializers.Serializer):
     username = serializers.CharField()
