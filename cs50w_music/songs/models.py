@@ -15,6 +15,10 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+    
+    def delete(self, using=None, keep_parents=False):
+        self.is_active = False
+        self.save(using=using)
 
 
 class Album(models.Model):

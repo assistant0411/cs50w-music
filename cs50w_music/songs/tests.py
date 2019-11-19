@@ -72,72 +72,64 @@ class RegistrationAPITests(BaseAPITest):
 
     def test_fail_user_registration_username_taken(self):
         """User registration should fail if username is already taken."""
-        old_user_data = self.old_user_data.copy()
-        old_user_data.update({"password_confirmation": self.old_user_data["password"]})
-        response = self.client.post(reverse('songs:user-register'), old_user_data, format='json')
+        self.old_user_data.update({"password_confirmation": self.old_user_data["password"]})
+        response = self.client.post(reverse('songs:user-register'), self.old_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.count(), 2) # self.old_user and old_user_2
         self.assertEqual(response.json()["username"][0], 'A user with that username already exists.')
 
     def test_fail_user_registration_password_mismatch(self):
         """User registration should fail if password_confirmation doesn't match password."""
-        new_user_data = self.new_user_data.copy()
-        new_user_data["password_confirmation"] += "_2"
-        response = self.client.post(reverse('songs:user-register'), new_user_data, format='json')
+        self.new_user_data["password_confirmation"] += "_2"
+        response = self.client.post(reverse('songs:user-register'), self.new_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.count(), 2) # self.old_user and old_user_2
-        self.assertEqual(response.json()["non_field_errors"][0], 'Passwords do not match')
+        self.assertEqual(response.json()["non_field_errors"][0], 'Passwords do not match.')
 
     def test_fail_user_registration_short_password(self):
         """User registration should fail if the provided password is less than 8 characters."""
-        new_user_data = self.new_user_data.copy()
-        new_user_data["password"] = "pass"
-        response = self.client.post(reverse('songs:user-register'), new_user_data, format='json')
+        self.new_user_data["password"] = "pass"
+        response = self.client.post(reverse('songs:user-register'), self.new_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.count(), 2) # self.old_user and old_user_2
         self.assertEqual(response.json()["non_field_errors"][0], 'This password is too short. It must contain at least 8 characters.')
 
     def test_fail_user_registration_future_birthday(self):
         """User registration should fail if the provided birth date is in the future."""
-        new_user_data = self.new_user_data.copy()
-        new_user_data["birth_date"] = self.tomorrow
-        response = self.client.post(reverse('songs:user-register'), new_user_data, format='json')
+        self.new_user_data["birth_date"] = self.tomorrow
+        response = self.client.post(reverse('songs:user-register'), self.new_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.count(), 2) # self.old_user and old_user_2
         self.assertRegex(response.json()["birth_date"][0], r'Ensure this value is less than or equal to \d{4}-\d{2}-\d{2}.')
 
     def test_fail_user_registration_invalid_country(self):
         """User registration should fail if the provided country doesn't exist."""
-        new_user_data = self.new_user_data.copy()
-        new_user_data["country"] = 'AA'
-        response = self.client.post(reverse('songs:user-register'), new_user_data, format='json')
+        self.new_user_data["country"] = 'AA'
+        response = self.client.post(reverse('songs:user-register'), self.new_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.count(), 2) # self.old_user and old_user_2
         self.assertRegex(response.json()["country"][0], r'.* is not a valid choice.')
 
     def test_fail_user_registration_skip_username(self):
         """User registration should fail if username is not provided."""
-        new_user_data = self.new_user_data.copy()
-        new_user_data.pop("username")
-        response = self.client.post(reverse('songs:user-register'), new_user_data, format='json')
+        self.new_user_data.pop("username")
+        response = self.client.post(reverse('songs:user-register'), self.new_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.count(), 2) # self.old_user and old_user_2
         self.assertEqual(response.json()["username"][0], 'This field is required.')
 
     def test_fail_user_registration_skip_password(self):
         """User registration should fail if password is not provided."""
-        new_user_data = self.new_user_data.copy()
-        new_user_data.pop("password")
-        response = self.client.post(reverse('songs:user-register'), new_user_data, format='json')
+        self.new_user_data.pop("password")
+        response = self.client.post(reverse('songs:user-register'), self.new_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.count(), 2) # self.old_user and old_user_2
         self.assertEqual(response.json()["password"][0], 'This field is required.')
 
     def test_fail_user_registration_skip_password_confirmation(self):
         """User registration should fail if password confirmation is not provided."""
-        new_user_data = self.new_user_data.copy()
-        new_user_data.pop("password_confirmation")
-        response = self.client.post(reverse('songs:user-register'), new_user_data, format='json')
+        self.new_user_data.pop("password_confirmation")
+        response = self.client.post(reverse('songs:user-register'), self.new_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.count(), 2) # self.old_user and old_user_2
         self.assertEqual(response.json()["password_confirmation"][0], 'This field is required.')
@@ -148,6 +140,9 @@ class RegistrationAPITests(BaseAPITest):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         #put
         response = self.client.put(reverse('songs:user-register'), self.new_user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        #put
+        response = self.client.patch(reverse('songs:user-register'), self.new_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         #delete
         response = self.client.delete(reverse('songs:user-register'))
@@ -163,33 +158,29 @@ class LoginAPITests(BaseAPITest):
 
     def test_fail_user_login_wrong_username(self):
         """User login should fail with incorrect credentials."""
-        old_user_data = self.old_user_data.copy()
-        old_user_data["username"] += "_2"
-        response = self.client.post(reverse('songs:user-login'), old_user_data, format='json')
+        self.old_user_data["username"] += "_2"
+        response = self.client.post(reverse('songs:user-login'), self.old_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json()["non_field_errors"][0], 'Invalid Details.')
 
     def test_fail_user_login_wrong_password(self):
         """User login should fail with incorrect credentials."""
-        old_user_data = self.old_user_data.copy()
-        old_user_data["password"] += "_2"
-        response = self.client.post(reverse('songs:user-login'), old_user_data, format='json')
+        self.old_user_data["password"] += "_2"
+        response = self.client.post(reverse('songs:user-login'), self.old_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json()["non_field_errors"][0], 'Invalid Details.')
 
     def test_fail_user_login_skip_username(self):
         """User login should fail if username is not provided."""
-        old_user_data = self.old_user_data.copy()
-        old_user_data.pop("username")
-        response = self.client.post(reverse('songs:user-login'), old_user_data, format='json')
+        self.old_user_data.pop("username")
+        response = self.client.post(reverse('songs:user-login'), self.old_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json()["username"][0], 'This field is required.')
 
     def test_fail_user_login_skip_password(self):
         """User login should fail if password is not provided."""
-        old_user_data = self.old_user_data.copy()
-        old_user_data.pop("password")
-        response = self.client.post(reverse('songs:user-login'), old_user_data, format='json')
+        self.old_user_data.pop("password")
+        response = self.client.post(reverse('songs:user-login'), self.old_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json()["password"][0], 'This field is required.')
 
@@ -200,6 +191,9 @@ class LoginAPITests(BaseAPITest):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         #put
         response = self.client.put(reverse('songs:user-login'), self.old_user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        #patch
+        response = self.client.patch(reverse('songs:user-login'), self.old_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         #delete
         response = self.client.delete(reverse('songs:user-login'))
@@ -223,9 +217,8 @@ class AuthenticatedAPITests(BaseAPITest):
         }
 
         # create a song and then set artists to prevent TypeError 
-        song_data = self.song_data.copy()
-        artists = song_data.pop("artists")
-        self.old_song = Song.objects.create(**song_data)
+        artists = self.song_data.pop("artists")
+        self.old_song = Song.objects.create(**self.song_data)
         self.old_song.artists.set(artists)
 
         self.tearDown()
@@ -235,7 +228,7 @@ class AuthenticatedAPITests(BaseAPITest):
         self.song_data["audio_file"].seek(0)
 
 
-class UserViewTest(AuthenticatedAPITests):
+class UserViewSetTest(AuthenticatedAPITests):
     def test_user_list(self):
         """Successfully list all users."""
         response = self.client.get(reverse('songs:users-list'))
@@ -250,12 +243,15 @@ class UserViewTest(AuthenticatedAPITests):
         # put
         response = self.client.put(reverse('songs:users-list'))
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        # patch
+        response = self.client.patch(reverse('songs:users-list'))
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         # delete
         response = self.client.delete(reverse('songs:users-list'))
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_user_detail(self):
-        """Successfully get old_user details"""
+        """Successfully get details of a existing user"""
         response = self.client.get(reverse('songs:users-detail', args=[self.old_user.id]))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["username"], self.old_user.username)
@@ -273,33 +269,31 @@ class UserViewTest(AuthenticatedAPITests):
         response = self.client.get(reverse('songs:users-detail', args=[get_user_model().objects.all().aggregate(Max("id"))["id__max"] + 1]))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_user_detail_update(self):
-        """Test user can update their details"""
-        new_user_data = self.new_user_data.copy()
-        new_user_data.update({"old_password": self.old_user_data["password"]})
+    def test_user_detail_put(self):
+        """Test user can update all of their details"""
+        self.new_user_data.update({"old_password": self.old_user_data["password"]})
         old_password_hash = self.old_user.password
-        response = self.client.put(reverse('songs:users-detail', args=[self.old_user.id]), new_user_data, format='json')
+        response = self.client.put(reverse('songs:users-detail', args=[self.old_user.id]), self.new_user_data, format='json')
         self.old_user.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(self.old_user.username, self.new_user_data["username"])
         self.assertNotEqual(self.old_user.password, old_password_hash)
 
-    def test_user_detail_change_username_taken(self):
+    def test_user_detail_change_username(self):
         """change username"""
-        new_username = "non_taken_user"
-        response = self.client.put(reverse('songs:users-detail', args=[self.old_user.id]), {"username": new_username}, format='json')
-        print(response.json())
+        new_username = "available_username"
+        response = self.client.patch(reverse('songs:users-detail', args=[self.old_user.id]), {"username": new_username}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["username"][0], new_username)
+        self.assertEqual(response.json()["username"], new_username)
 
     def test_fail_user_detail_change_username_taken(self):
         """Assert user can't change their username to a taken one"""
-        response = self.client.put(reverse('songs:users-detail', args=[self.old_user.id]), {"username": self.old_user_2.username}, format='json')
+        response = self.client.patch(reverse('songs:users-detail', args=[self.old_user.id]), {"username": self.old_user_2.username}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json()["username"][0], 'A user with that username already exists.')
 
     def test_fail_user_detail_change_password_incorrect_old_password(self):
-        """Assert user cant change they password if the input incorrect old password"""
+        """Assert user cant change their password if they input incorrect old password"""
         old_password = self.old_user.password
         response = self.client.patch(
             reverse('songs:users-detail', 
@@ -309,10 +303,10 @@ class UserViewTest(AuthenticatedAPITests):
         self.old_user.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(self.old_user.password, old_password)
-        self.assertEqual(response.json()["old_password"][0], 'Old password is incorrect')
+        self.assertEqual(response.json()[0], 'Old password is incorrect.')
 
-    def test_fail_user_detail_change_password_short(self):
-        """Assert user cant change they password if the input a short new password"""
+    def test_fail_user_detail_change_password_too_short(self):
+        """Assert user cant change their password if they input a short new password"""
         old_password = self.old_user.password
         response = self.client.patch(
             reverse('songs:users-detail', 
@@ -324,12 +318,44 @@ class UserViewTest(AuthenticatedAPITests):
         self.assertEqual(self.old_user.password, old_password)
         self.assertEqual(response.json()["non_field_errors"][0], 'This password is too short. It must contain at least 8 characters.')
 
+    def test_fail_user_detail_change_password_skip_password_confirmation(self):
+        """Assert user cant change their password if they don't provide their old password"""
+        old_password = self.old_user.password
+        response = self.client.patch(
+            reverse('songs:users-detail', 
+                    args=[self.old_user.id]),
+                    {"old_password": self.old_user_data["password"], "password": self.new_user_data["password"]}, 
+                    format='json')
+        self.old_user.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.old_user.password, old_password)
+        self.assertEqual(response.json()["non_field_errors"][0], 'Passwords do not match.')
+
+    def test_fail_user_detail_change_password_skip_old_password(self):
+        """Assert user cant change their password if they don't privde password condirmation"""
+        old_password = self.old_user.password
+        response = self.client.patch(
+            reverse('songs:users-detail', 
+                    args=[self.old_user.id]),
+                    {"password": self.new_user_data["password"], "password_confirmation": self.new_user_data["password"]}, 
+                    format='json')
+        self.old_user.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.old_user.password, old_password)
+        self.assertEqual(response.json()[0], 'Old password is incorrect.')
+
     def test_fail_user_detail_post(self):
         """A user should be created only using register"""
         response = self.client.post(reverse('songs:users-detail', args=[self.old_user.id]))
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def test_fail_user_detail_another_user(self):
+    def test_user_detail_delete_user(self):
+        """A user should be able to delete their profile."""
+        response = self.client.delete(reverse('songs:users-detail', args=[self.old_user.id]))
+        #print(response.json())
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_fail_user_detail_modify_another_user(self):
         """
         Check that post, put and delete methods are not allowed for another user
         Authenticated as old_user and attempt to send those requests to old_user_2
@@ -339,6 +365,9 @@ class UserViewTest(AuthenticatedAPITests):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         # put
         response = self.client.put(reverse('songs:users-detail', args=[self.old_user_2.id]))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # patch
+        response = self.client.patch(reverse('songs:users-detail', args=[self.old_user_2.id]))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         # delete
         response = self.client.delete(reverse('songs:users-detail', args=[self.old_user_2.id]))
@@ -353,10 +382,8 @@ class SongTests(AuthenticatedAPITests):
         self.assertEqual(response.json()["title"], self.song_data["title"])
 
     def test_fail_create_song_invalid_audio_file(self):
-        song_data = self.song_data.copy()
-        song_data.pop("audio_file")
-        song_data["audio_file"] = SimpleUploadedFile(name="test_image_file.png", content=b'test image file content', content_type='image/png'),
-        response = self.client.post('/api/songs/', data=song_data, format='multipart')
+        self.song_data["audio_file"] = SimpleUploadedFile(name="test_image_file.png", content=b'test image file content', content_type='image/png')
+        response = self.client.post('/api/songs/', data=self.song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Song.objects.count(), 1)
         self.assertRegex(response.json()["audio_file"][0], r'File extension .* is not allowed. Allowed extensions are: mp3, wav, ogg.')
