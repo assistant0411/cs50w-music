@@ -7,9 +7,9 @@ from knox import views as knox_views
 app_name = 'songs'
 
 router = DefaultRouter()
-router.register(r'songs', views.SongViewSet)
-router.register(r'playlists', views.PlaylistViewSet)
-router.register(r'albums', views.AlbumViewSet)
+router.register(r'songs', views.SongViewSet, basename='songs')
+router.register(r'playlists', views.PlaylistViewSet, basename='playlists')
+router.register(r'albums', views.AlbumViewSet, basename='albums')
 router.register(r'users', views.UserViewSet, basename='users')
 
 
