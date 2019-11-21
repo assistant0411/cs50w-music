@@ -431,21 +431,21 @@ class SongTests(AuthenticatedAPITests):
     def test_create_song(self):
         response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Song.objects.count(), 3)  # old song, old song 2 and new song
+        self.assertEqual(Song.objects.count(), 3)  # old_song, old_song_2 and new song
         self.assertEqual(response.json()["title"], self.new_song_data["title"])
 
     def test_fail_create_song_invalid_audio_file(self):
         self.new_song_data["audio_file"] = SimpleUploadedFile(name="test_image_file.png", content=b'test image file content', content_type='image/png')
         response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(Song.objects.count(), 2)  # old song and old song 2
+        self.assertEqual(Song.objects.count(), 2)  # old_song and old_song_2
         self.assertRegex(response.json()["audio_file"][0], r'File extension .* is not allowed. Allowed extensions are: mp3, wav, ogg.')
 
     def test_fail_create_song_missing_title(self):
         self.new_song_data.pop("title")
         response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(Song.objects.count(), 2)  # old song and old song 2
+        self.assertEqual(Song.objects.count(), 2)  # old_song and old_song_2
         self.assertEqual(response.json()["title"][0], 'This field is required.')
 
     def test_get_song_detail(self):
@@ -488,5 +488,182 @@ class SongTests(AuthenticatedAPITests):
         self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
 
         response = self.client.delete(reverse('songs:songs-detail', args=[self.old_song_2.id]), format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
+
+
+class AlbumTests(AuthenticatedAPITests):
+    def setUp(self):
+        super().setUp()
+        self.new_album_data = {
+            'title': 'New album',
+            'release_date': self.yesterday,
+            'artists': [self.old_user.id]
+        }
+
+        self.old_album_2_data = {
+            'title': 'Old album 2',
+            'release_date': self.yesterday,
+            'artists': [self.old_user_2.id]
+        }
+
+        # create an album and then set artists to prevent TypeError 
+        album_artists = self.old_album_2_data.pop("artists")
+        self.old_album_2 = Album.objects.create(**self.old_album_2_data)
+        self.old_album_2.artists.set(album_artists)
+
+    def test_album_list(self):
+        """Successfully list all albums."""
+        response = self.client.get(reverse('songs:albums-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()["results"]), 2)  # old_album and old_album_2
+
+    def test_fail_album_list_not_allowed_methods(self):
+        """Check that put, patch and delete methods are not allowed for album list"""
+        # put
+        response = self.client.put(reverse('songs:albums-list'))
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        # patchAlbum.objects
+        response = self.client.patch(reverse('songs:albums-list'))
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        # delete
+        response = self.client.delete(reverse('songs:albums-list'))
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_create_album(self):
+        response = self.client.post(reverse('songs:albums-list'), data=self.new_album_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Album.objects.count(), 3)  # old_album, old_album_2 and new album
+        self.assertEqual(response.json()["title"], self.new_album_data["title"])
+
+    def test_fail_create_album_missing_title(self):
+        self.new_album_data.pop("title")
+        response = self.client.post(reverse('songs:albums-list'), data=self.new_album_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Album.objects.count(), 2)  # old_album and old_album_2
+        self.assertEqual(response.json()["title"][0], 'This field is required.')
+
+    def test_get_album_detail(self):
+        """Successfully get details of an existing album"""
+        response = self.client.get(reverse('songs:albums-detail', args=[self.old_album.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["title"], self.old_album.title)
+
+    def test_update_album(self):
+        response = self.client.put(reverse('songs:albums-detail', args=[self.old_album.id]), data=self.new_album_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["title"], self.new_album_data["title"])
+
+    def test_update_album_title(self):
+        response = self.client.patch(reverse('songs:albums-detail', args=[self.old_album.id]), {"title": self.new_album_data["title"]}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["title"], self.new_album_data["title"])
+
+    def test_album_detail_delete_album(self):
+        """A user should be able to delete a album of theirs."""
+        response = self.client.delete(reverse('songs:albums-detail', args=[self.old_user.albums.first().id]))
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_fail_update_album_by_another_user(self):
+        response = self.client.post(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='json')
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(response.json()["detail"], 'Method "POST" not allowed.')
+
+        response = self.client.put(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
+
+        response = self.client.patch(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
+
+        response = self.client.delete(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
+
+
+class PlaylistTest(AuthenticatedAPITests):
+    def setUp(self):
+        super().setUp()
+        self.old_playlist_title = "Old playlist"
+        self.old_playlist = Playlist.objects.create(title=self.old_playlist_title, owner=self.old_user)
+        self.old_playlist.songs.add(self.old_song)
+        self.old_playlist.songs.add(self.old_song_2)
+
+        self.old_playlist_2_title = "Old playlist 2"
+        self.old_playlist_2 = Playlist.objects.create(title=self.old_playlist_2_title, owner=self.old_user_2)
+        self.old_playlist_2.songs.add(self.old_song)
+        self.old_playlist_2.songs.add(self.old_song_2)
+
+        self.new_playlist_title = "New Playlist"
+
+    def test_playlist_list(self):
+        """Successfully list all playlists."""
+        response = self.client.get(reverse('songs:playlists-list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()["results"]), 2)  # old_playlist and old_playlist_2
+
+    def test_fail_playlist_list_not_allowed_methods(self):
+        """Check that put, patch and delete methods are not allowed for playlist list"""
+        # put
+        response = self.client.put(reverse('songs:playlists-list'))
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        # patchPlaylist.objects
+        response = self.client.patch(reverse('songs:playlists-list'))
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        # delete
+        response = self.client.delete(reverse('songs:playlists-list'))
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_create_playlist(self):
+        response = self.client.post(reverse('songs:playlists-list'), data={"title": self.new_playlist_title}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Playlist.objects.count(), 3)  # old_playlist, old_playlist_2 and new playlist
+        self.assertEqual(response.json()["title"], self.new_playlist_title)
+        self.assertEqual(response.json()["owner"], self.old_user.id) # assert that old_user is set as playlist owner, because we are authenticated as old_user
+
+    def test_fail_create_playlist_missing_title(self):
+        response = self.client.post(reverse('songs:playlists-list'), format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Playlist.objects.count(), 2)  # old_playlist and old_playlist_2
+        self.assertEqual(response.json()["title"][0], 'This field is required.')
+
+    def test_get_playlist_detail(self):
+        """Successfully get details of an existing playlist"""
+        response = self.client.get(reverse('songs:playlists-detail', args=[self.old_playlist.id]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["title"], self.old_playlist.title)
+        self.assertEqual(response.json()["owner"], self.old_user.id) # assert that old_user is set as playlist owner, because we are authenticated as old_user
+        self.assertEqual(response.json()['songs'], [song.id for song in self.old_playlist.songs.all()])
+
+    def test_update_playlist_title(self):
+        response = self.client.patch(reverse('songs:playlists-detail', args=[self.old_playlist.id]), {"title": self.new_playlist_title}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()["title"], self.new_playlist_title)
+
+    def test_fail_update_playlist_owner(self):
+        response = self.client.patch(reverse('songs:playlists-detail', args=[self.old_playlist.id]), {"owner": self.old_user_2.id}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(response.json()["owner"], self.old_user_2.id)
+
+    def test_playlist_detail_delete_playlist(self):
+        """A user should be able to delete a playlist of theirs."""
+        response = self.client.delete(reverse('songs:playlists-detail', args=[self.old_user.playlists.first().id]))
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_fail_update_playlist_by_another_user(self):
+        response = self.client.post(reverse('songs:playlists-detail', args=[self.old_playlist_2.id]), format='json')
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(response.json()["detail"], 'Method "POST" not allowed.')
+
+        response = self.client.put(reverse('songs:playlists-detail', args=[self.old_playlist_2.id]), format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
+
+        response = self.client.patch(reverse('songs:playlists-detail', args=[self.old_playlist_2.id]), format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
+
+        response = self.client.delete(reverse('songs:playlists-detail', args=[self.old_playlist_2.id]), format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
