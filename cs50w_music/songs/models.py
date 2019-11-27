@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django_countries.fields import CountryField
 from django.utils import timezone
-from django.core.validators import MaxValueValidator, FileExtensionValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
 from datetime import date
 
 
@@ -10,11 +10,15 @@ GENRE_CHOICES = ['rap', 'pop', 'rock']
 
 
 class User(AbstractUser):
-    birth_date = models.DateField(null=True, blank=True)
+    birth_date = models.DateField(null=True, blank=True, validators=[MaxValueValidator(limit_value=date.today)])
     country = CountryField(null=True, blank=True)
 
     def __str__(self):
         return self.username
+    
+    def delete(self, using=None, keep_parents=False):
+        self.is_active = False
+        self.save(using=using)
 
 
 class Album(models.Model):
@@ -33,8 +37,8 @@ class Song(models.Model):
     artists = models.ManyToManyField(User, related_name="songs", blank=True)  # blank because request.user is added to the artists in the view
     genre = models.CharField(max_length=20, blank=True, null=True, choices=[(g, g) for g in GENRE_CHOICES])
     album = models.ForeignKey(Album, blank=True, null=True, on_delete=models.SET_NULL, related_name="songs")
-    duration = models.PositiveIntegerField (blank=True, null=True)
-    track_number = models.PositiveIntegerField (blank=True, null=True)
+    duration = models.PositiveIntegerField(blank=True, null=True)
+    track_number = models.PositiveIntegerField(blank=True, null=True, validators=[MinValueValidator(1)])
 
     def __str__(self):
         return f"Song '{self.title}' by {', '.join([str(artist) for artist in self.artists.all()])}"

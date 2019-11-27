@@ -1,0 +1,5 @@
+django
+djangorestframework
+django-rest-knox
+django_countries
+django-cleanup
