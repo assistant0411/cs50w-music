@@ -9,5 +9,4 @@ jobs:
     - name: Run Django unit tests
       run: |
         pip3 install --user -r requirements.txt
-        cd cs50w_music/
         python3 manage.py test
