@@ -71,18 +71,19 @@ class SongViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post', 'delete'])
     def manage_artists(self, request, pk=None):
         song = self.get_object()
-        artist_ids = []
+        artist_id = request.data.get('artist_id', None)
 
-        artist_ids = request.data.getlist('artist_ids', [])
-        artists = User.objects.filter(id__in=artist_ids)
+        try:
+            artist = User.objects.get(pk=artist_id)
+        except User.DoesNotExist:
+            return Response({'detail': 'Invalid artist_id.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'POST':
-            song.artists.add(*artists)
-            message = 'Artists added successfully.'
-
+            song.artists.add(artist)
+            message = 'Artist added successfully.'
         elif request.method == 'DELETE':
-            song.artists.remove(*artists)
-            message = 'Artists removed successfully.'
+            song.artists.remove(artist)
+            message = 'Artist removed successfully.'
 
         return Response({'detail': message})
     
@@ -106,18 +107,20 @@ class PlaylistViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post', 'delete'])
     def manage_songs(self, request, pk=None):
-        playlist = self.get_object()
+        album = self.get_object()
+        song_id = request.data.get('song_id', None)
 
-        song_ids = request.data.getlist('song_ids', [])
-        songs = Song.objects.filter(id__in=song_ids)
+        try:
+            song = Song.objects.get(pk=song_id)
+        except Song.DoesNotExist:
+            return Response({'detail': 'Invalid song_id.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'POST':
-            playlist.songs.add(*songs)
-            message = 'Songs added successfully.'
-
+            album.songs.add(song)
+            message = 'Song added successfully.'
         elif request.method == 'DELETE':
-            playlist.songs.remove(*songs)
-            message = 'Songs removed successfully.'
+            album.songs.remove(song)
+            message = 'Song removed successfully.'
 
         return Response({'detail': message})
 
@@ -138,17 +141,18 @@ class AlbumViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post', 'delete'])
     def manage_artists(self, request, pk=None):
         album = self.get_object()
-        artist_ids = []
+        artist_id = request.data.get('artist_id', None)
 
-        artist_ids = request.data.getlist('artist_ids', [])
-        artists = User.objects.filter(id__in=artist_ids)
+        try:
+            artist = User.objects.get(pk=artist_id)
+        except User.DoesNotExist:
+            return Response({'detail': 'Invalid artist_id.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'POST':
-            album.artists.add(*artists)
-            message = 'Artists added successfully.'
-
+            album.artists.add(artist)
+            message = 'Artist added successfully.'
         elif request.method == 'DELETE':
-            album.artists.remove(*artists)
-            message = 'Artists removed successfully.'
+            album.artists.remove(artist)
+            message = 'Artist removed successfully.'
 
         return Response({'detail': message})
