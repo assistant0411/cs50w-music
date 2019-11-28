@@ -16,7 +16,6 @@ router.register(r'users', views.UserViewSet, basename='users')
 urlpatterns = [
     path('', views.index, name="index"),
     path('api/', include(router.urls)),
-    path('api/songs/<int:song_id>/play/', views.PlaySongView.as_view(), name='play-song'),
     path('api/register/', views.RegistrationAPI.as_view(), name='user-register'),
     path('api/login/', views.LoginAPI.as_view(), name='user-login'),
     path('api/logout/', knox_views.LogoutView.as_view(), name='knox-logout'),
