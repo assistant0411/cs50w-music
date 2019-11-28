@@ -469,6 +469,13 @@ class SongTests(AuthenticatedAPITests):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["title"], self.new_song_data["title"])
 
+    def test_fail_album_by_other_artist(self):
+        album = Album.objects.create(title="Old album")
+        album.artists.add(self.old_user_2)
+        response = self.client.patch(reverse('songs:songs-detail', args=[self.old_song.id]), {"album": album.id}, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(self.old_user in album.artists.all())
+    
     def test_song_detail_delete_song(self):
         """A user should be able to delete a song of theirs."""
         response = self.client.delete(reverse('songs:songs-detail', args=[self.old_user.songs.first().id]))
@@ -491,6 +498,20 @@ class SongTests(AuthenticatedAPITests):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
 
+    def test_add_another_artist(self):
+        self.assertFalse(self.old_user_2 in self.old_song.artists.all())
+        detail_url = reverse('songs:songs-detail', kwargs={'pk': self.old_song.id})
+        custom_action_url = f'{detail_url}manage_artists/'
+        response = self.client.post(custom_action_url, {"artist_ids": [self.old_user_2.id]})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(self.old_user_2 in self.old_song.artists.all())
+
+    def test_remove_artist(self):
+        detail_url = reverse('songs:songs-detail', kwargs={'pk': self.old_song.id})
+        custom_action_url = f'{detail_url}manage_artists/'
+        response = self.client.delete(custom_action_url, {"artist_ids": [self.old_user.id]})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.old_song.artists.count(), 0)
 
 class AlbumTests(AuthenticatedAPITests):
     def setUp(self):
@@ -581,14 +602,29 @@ class AlbumTests(AuthenticatedAPITests):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
 
+    def test_add_another_artist(self):
+        self.assertFalse(self.old_user_2 in self.old_album.artists.all())
+        detail_url = reverse('songs:albums-detail', kwargs={'pk': self.old_album.id})
+        custom_action_url = f'{detail_url}manage_artists/'
+        response = self.client.post(custom_action_url, {"artist_ids": [self.old_user_2.id]})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(self.old_user_2 in self.old_album.artists.all())
 
-class PlaylistTest(AuthenticatedAPITests):
+    def test_remove_artist(self):
+        detail_url = reverse('songs:albums-detail', kwargs={'pk': self.old_album.id})
+        custom_action_url = f'{detail_url}manage_artists/'
+        response = self.client.delete(custom_action_url, {"artist_ids": [self.old_user.id]})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.old_album.artists.count(), 0)
+
+
+class PlaylistTests(AuthenticatedAPITests):
     def setUp(self):
         super().setUp()
         self.old_playlist_title = "Old playlist"
         self.old_playlist = Playlist.objects.create(title=self.old_playlist_title, owner=self.old_user)
         self.old_playlist.songs.add(self.old_song)
-        self.old_playlist.songs.add(self.old_song_2)
+        #self.old_playlist.songs.add(self.old_song_2)
 
         self.old_playlist_2_title = "Old playlist 2"
         self.old_playlist_2 = Playlist.objects.create(title=self.old_playlist_2_title, owner=self.old_user_2)
@@ -667,3 +703,18 @@ class PlaylistTest(AuthenticatedAPITests):
         response = self.client.delete(reverse('songs:playlists-detail', args=[self.old_playlist_2.id]), format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
+
+    def test_add_song(self):
+        self.assertFalse(self.old_song_2 in self.old_playlist.songs.all())
+        detail_url = reverse('songs:playlists-detail', kwargs={'pk': self.old_playlist.id})
+        custom_action_url = f'{detail_url}manage_songs/'
+        response = self.client.post(custom_action_url, {"song_ids": [self.old_song_2.id]})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(self.old_song_2 in self.old_playlist.songs.all())
+
+    def test_remove_song(self):
+        detail_url = reverse('songs:playlists-detail', kwargs={'pk': self.old_playlist.id})
+        custom_action_url = f'{detail_url}manage_songs/'
+        response = self.client.delete(custom_action_url, {"song_ids": [self.old_song.id]})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.old_playlist.songs.count(), 0)

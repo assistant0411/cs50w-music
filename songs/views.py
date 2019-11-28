@@ -11,6 +11,7 @@ from .permissions import IsArtistOrReadOnly, IsPlaylistOwnerOrReadOnly, IsUserOr
 from django.shortcuts import render
 from rest_framework import status
 from django.contrib.auth.hashers import check_password, make_password
+from rest_framework.decorators import action
 
 
 def index(request):
@@ -66,6 +67,25 @@ class SongViewSet(viewsets.ModelViewSet):
         # Save the album and then add the current user to the artists
         song = serializer.save()
         song.artists.add(self.request.user)
+
+    @action(detail=True, methods=['post', 'delete'])
+    def manage_artists(self, request, pk=None):
+        song = self.get_object()
+        artist_ids = []
+
+        artist_ids = request.data.getlist('artist_ids', [])
+        artists = User.objects.filter(id__in=artist_ids)
+
+        if request.method == 'POST':
+            song.artists.add(*artists)
+            message = 'Artists added successfully.'
+
+        elif request.method == 'DELETE':
+            song.artists.remove(*artists)
+            message = 'Artists removed successfully.'
+
+        return Response({'detail': message})
+
     
 
 class PlaylistViewSet(viewsets.ModelViewSet):
@@ -78,6 +98,23 @@ class PlaylistViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    @action(detail=True, methods=['post', 'delete'])
+    def manage_songs(self, request, pk=None):
+        playlist = self.get_object()
+
+        song_ids = request.data.getlist('song_ids', [])
+        songs = Song.objects.filter(id__in=song_ids)
+
+        if request.method == 'POST':
+            playlist.songs.add(*songs)
+            message = 'Songs added successfully.'
+
+        elif request.method == 'DELETE':
+            playlist.songs.remove(*songs)
+            message = 'Songs removed successfully.'
+
+        return Response({'detail': message})
 
 
 class AlbumViewSet(viewsets.ModelViewSet):
@@ -92,6 +129,24 @@ class AlbumViewSet(viewsets.ModelViewSet):
         # Save the album and then add the current user to the artists
         album = serializer.save()
         album.artists.add(self.request.user)
+
+    @action(detail=True, methods=['post', 'delete'])
+    def manage_artists(self, request, pk=None):
+        album = self.get_object()
+        artist_ids = []
+
+        artist_ids = request.data.getlist('artist_ids', [])
+        artists = User.objects.filter(id__in=artist_ids)
+
+        if request.method == 'POST':
+            album.artists.add(*artists)
+            message = 'Artists added successfully.'
+
+        elif request.method == 'DELETE':
+            album.artists.remove(*artists)
+            message = 'Artists removed successfully.'
+
+        return Response({'detail': message})
 
 
 class PlaySongView(APIView):

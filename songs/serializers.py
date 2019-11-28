@@ -59,6 +59,16 @@ class SongSerializer(serializers.ModelSerializer):
     class Meta:
         model = Song
         fields = '__all__'
+        extra_kwargs = {
+            'audio_file': {'write_only': True},
+        }
+
+    def validate_album(self, album):
+        # Check if the user is an artist of the album
+        if self.context['request'].user not in album.artists.all():
+            raise serializers.ValidationError("You must be an artist of the album to add a song to it.")
+        
+        return album
 
 
 class AlbumSerializer(serializers.ModelSerializer):
