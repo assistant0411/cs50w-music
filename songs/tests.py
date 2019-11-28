@@ -499,20 +499,43 @@ class SongTests(AuthenticatedAPITests):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
 
-    def test_add_another_artist(self):
+    def test_add_artist(self):
+        """Add an artist to the list of artists associated with a song"""
         self.assertFalse(self.old_user_2 in self.old_song.artists.all())
         detail_url = reverse('songs:songs-detail', kwargs={'pk': self.old_song.id})
         custom_action_url = f'{detail_url}manage_artists/'
-        response = self.client.post(custom_action_url, {"artist_ids": [self.old_user_2.id]})
+        response = self.client.post(custom_action_url, {"artist_id": self.old_user_2.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(self.old_user_2 in self.old_song.artists.all())
+        self.assertEqual(self.old_song.artists.count(), 2)  # old_user and old_user_2
 
-    def test_remove_artist(self):
+    def test_fail_add_non_existing_artist(self):
+        """Fail to add an artist with an invalid id to the list of artists associated with a song"""
         detail_url = reverse('songs:songs-detail', kwargs={'pk': self.old_song.id})
         custom_action_url = f'{detail_url}manage_artists/'
-        response = self.client.delete(custom_action_url, {"artist_ids": [self.old_user.id]})
+        response = self.client.post(custom_action_url, {"artist_id": get_user_model().objects.all().aggregate(Max("id"))["id__max"] + 1})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()["detail"], "Invalid artist_id.")
+        self.assertEqual(self.old_song.artists.count(), 1)  # old_user
+
+    def test_remove_artist(self):
+        """Remove an artist from the list of artists associated with a song"""
+        self.assertTrue(self.old_user in self.old_song.artists.all())  # old_user
+        detail_url = reverse('songs:songs-detail', kwargs={'pk': self.old_song.id})
+        custom_action_url = f'{detail_url}manage_artists/'
+        response = self.client.delete(custom_action_url, {"artist_id": self.old_user.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(self.old_user in self.old_song.artists.all())
         self.assertEqual(self.old_song.artists.count(), 0)
+
+    def test_fail_remove_non_existing_artist(self):
+        """Fail to remove an artist with an invalid id from the list of artists associated with a song"""
+        detail_url = reverse('songs:songs-detail', kwargs={'pk': self.old_song.id})
+        custom_action_url = f'{detail_url}manage_artists/'
+        response = self.client.delete(custom_action_url, {"artist_id": get_user_model().objects.all().aggregate(Max("id"))["id__max"] + 1})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()["detail"], "Invalid artist_id.")
+        self.assertEqual(self.old_song.artists.count(), 1)  # old_user
 
     def test_play_song(self):
         detail_url = reverse('songs:songs-detail', kwargs={'pk': self.old_song.id})
@@ -615,20 +638,43 @@ class AlbumTests(AuthenticatedAPITests):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
 
-    def test_add_another_artist(self):
+    def test_add_artist(self):
+        """Add an artist to the list of artists associated with an album"""
         self.assertFalse(self.old_user_2 in self.old_album.artists.all())
         detail_url = reverse('songs:albums-detail', kwargs={'pk': self.old_album.id})
         custom_action_url = f'{detail_url}manage_artists/'
-        response = self.client.post(custom_action_url, {"artist_ids": [self.old_user_2.id]})
+        response = self.client.post(custom_action_url, {"artist_id": self.old_user_2.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(self.old_user_2 in self.old_album.artists.all())
+        self.assertEqual(self.old_album.artists.count(), 2)  # old_user and old_user_2
 
-    def test_remove_artist(self):
+    def test_fail_add_non_existing_artist(self):
+        """Fail to add an artist with an invalid id to the list of artists associated with an album"""
         detail_url = reverse('songs:albums-detail', kwargs={'pk': self.old_album.id})
         custom_action_url = f'{detail_url}manage_artists/'
-        response = self.client.delete(custom_action_url, {"artist_ids": [self.old_user.id]})
+        response = self.client.post(custom_action_url, {"artist_id": get_user_model().objects.all().aggregate(Max("id"))["id__max"] + 1})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()["detail"], "Invalid artist_id.")
+        self.assertEqual(self.old_album.artists.count(), 1)  # old_user
+
+    def test_remove_artist(self):
+        """Remove an artist from the list of artists associated with an album"""
+        self.assertTrue(self.old_user in self.old_album.artists.all())  # old_user
+        detail_url = reverse('songs:albums-detail', kwargs={'pk': self.old_album.id})
+        custom_action_url = f'{detail_url}manage_artists/'
+        response = self.client.delete(custom_action_url, {"artist_id": self.old_user.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(self.old_user in self.old_album.artists.all())
         self.assertEqual(self.old_album.artists.count(), 0)
+
+    def test_fail_remove_non_existing_artist(self):
+        """Fail to remove an artist with an invalid id from the list of artists associated with an album"""
+        detail_url = reverse('songs:albums-detail', kwargs={'pk': self.old_album.id})
+        custom_action_url = f'{detail_url}manage_artists/'
+        response = self.client.delete(custom_action_url, {"artist_id": get_user_model().objects.all().aggregate(Max("id"))["id__max"] + 1})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()["detail"], "Invalid artist_id.")
+        self.assertEqual(self.old_album.artists.count(), 1)  # old_user
 
 
 class PlaylistTests(AuthenticatedAPITests):
@@ -718,16 +764,39 @@ class PlaylistTests(AuthenticatedAPITests):
         self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
 
     def test_add_song(self):
+        """Add a song to a playlist"""
         self.assertFalse(self.old_song_2 in self.old_playlist.songs.all())
         detail_url = reverse('songs:playlists-detail', kwargs={'pk': self.old_playlist.id})
         custom_action_url = f'{detail_url}manage_songs/'
-        response = self.client.post(custom_action_url, {"song_ids": [self.old_song_2.id]})
+        response = self.client.post(custom_action_url, {"song_id": self.old_song_2.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(self.old_song_2 in self.old_playlist.songs.all())
+        self.assertEqual(self.old_playlist.songs.count(), 2)  # old_song and old_song_2
 
-    def test_remove_song(self):
+    def test_fail_add_non_existing_song(self):
+        """Fail to add a song with an invalid id to a playlist"""
         detail_url = reverse('songs:playlists-detail', kwargs={'pk': self.old_playlist.id})
         custom_action_url = f'{detail_url}manage_songs/'
-        response = self.client.delete(custom_action_url, {"song_ids": [self.old_song.id]})
+        response = self.client.post(custom_action_url, {"song_id": Song.objects.all().aggregate(Max("id"))["id__max"] + 1})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()["detail"], "Invalid song_id.")
+        self.assertEqual(self.old_playlist.songs.count(), 1)  # old_song
+
+    def test_remove_song(self):
+        """Remove a song from a playlist"""
+        self.assertTrue(self.old_song in self.old_playlist.songs.all())  # old_song
+        detail_url = reverse('songs:playlists-detail', kwargs={'pk': self.old_playlist.id})
+        custom_action_url = f'{detail_url}manage_songs/'
+        response = self.client.delete(custom_action_url, {"song_id": self.old_song.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(self.old_song in self.old_playlist.songs.all())
         self.assertEqual(self.old_playlist.songs.count(), 0)
+
+    def test_fail_remove_non_existing_song(self):
+        """Fail to remove a song with an invalid id from a playlist"""
+        detail_url = reverse('songs:playlists-detail', kwargs={'pk': self.old_playlist.id})
+        custom_action_url = f'{detail_url}manage_songs/'
+        response = self.client.delete(custom_action_url, {"song_id": Song.objects.all().aggregate(Max("id"))["id__max"] + 1})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.json()["detail"], "Invalid song_id.")
+        self.assertEqual(self.old_playlist.songs.count(), 1)  # old_song
