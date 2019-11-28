@@ -85,6 +85,11 @@ class SongViewSet(viewsets.ModelViewSet):
             message = 'Artists removed successfully.'
 
         return Response({'detail': message})
+    
+    @action(detail=True, methods=['get'])
+    def play(self, request, pk=None):
+        song = self.get_object()
+        return FileResponse(song.audio_file, content_type='audio/mpeg')
 
     
 
@@ -147,12 +152,3 @@ class AlbumViewSet(viewsets.ModelViewSet):
             message = 'Artists removed successfully.'
 
         return Response({'detail': message})
-
-
-class PlaySongView(APIView):
-
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, song_id):
-        song = get_object_or_404(Song, pk=song_id)
-        return FileResponse(song.audio_file, content_type='audio/mpeg')

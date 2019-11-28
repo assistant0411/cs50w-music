@@ -513,6 +513,18 @@ class SongTests(AuthenticatedAPITests):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(self.old_song.artists.count(), 0)
 
+    def test_play_song(self):
+        detail_url = reverse('songs:songs-detail', kwargs={'pk': self.old_song.id})
+        response = self.client.get(f'{detail_url}play/')
+        self.assertAlmostEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_fail_play_song_invalid_id(self):
+        """Fail to play a song with an invallid id"""
+        detail_url = reverse('songs:songs-detail', kwargs={'pk': Song.objects.all().aggregate(Max("id"))["id__max"] + 1})
+        response = self.client.get(f'{detail_url}play/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.json()["detail"], 'Not found.')
+
 class AlbumTests(AuthenticatedAPITests):
     def setUp(self):
         super().setUp()
