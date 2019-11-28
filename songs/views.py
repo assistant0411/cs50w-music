@@ -68,7 +68,7 @@ class SongViewSet(viewsets.ModelViewSet):
         song = serializer.save()
         song.artists.add(self.request.user)
 
-    @action(detail=True, methods=['post', 'delete'], url_path='manage_artists')
+    @action(detail=True, methods=['post', 'delete'])
     def manage_artists(self, request, pk=None):
         song = self.get_object()
         artist_ids = []
@@ -99,7 +99,7 @@ class PlaylistViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    @action(detail=True, methods=['post', 'delete'], url_path='manage_songs')
+    @action(detail=True, methods=['post', 'delete'])
     def manage_songs(self, request, pk=None):
         playlist = self.get_object()
 
@@ -130,7 +130,7 @@ class AlbumViewSet(viewsets.ModelViewSet):
         album = serializer.save()
         album.artists.add(self.request.user)
 
-    @action(detail=True, methods=['post', 'delete'], url_path='manage_artists')
+    @action(detail=True, methods=['post', 'delete'])
     def manage_artists(self, request, pk=None):
         album = self.get_object()
         artist_ids = []
