@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 import datetime
 from django.db.models import Max
+from rest_framework.test import APITestCase
 
 
 class IndexTest(TestCase):
@@ -27,7 +28,7 @@ class IndexTest(TestCase):
         #self.assertEqual(response.context["flights"].count(), 3)
 
 
-class BaseAPITest(TestCase):
+class BaseAPITest(APITestCase):
     def setUp(self):
         self.client = APIClient(enforce_csrf_checks=True)
 
