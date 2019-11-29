@@ -1,6 +1,5 @@
-# cs50w-music
+# WIP cs50w-music
 
-WIP  
 My final project for CS50w - knockoff Spotify - a web application built with Django, DRF and React
 
 backend is sort of complete
