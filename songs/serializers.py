@@ -58,7 +58,7 @@ class LoginUserSerializer(serializers.Serializer):
 class SongSerializer(serializers.ModelSerializer):
     class Meta:
         model = Song
-        fields = '__all__'
+        exclude = ('artists',)
         extra_kwargs = {
             'audio_file': {'write_only': True},
         }
@@ -74,7 +74,7 @@ class SongSerializer(serializers.ModelSerializer):
 class AlbumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Album
-        fields = '__all__'
+        exclude = ('artists',)        
 
 
 class PlaylistSerializer(serializers.ModelSerializer):

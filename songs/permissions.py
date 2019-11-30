@@ -1,5 +1,6 @@
 from rest_framework import permissions
 
+
 class IsArtistOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # Allow GET, HEAD, and OPTIONS requests.
@@ -19,6 +20,12 @@ class IsPlaylistOwnerOrReadOnly(permissions.BasePermission):
         # Deny permission for editing or deleting if the user is not the owner.
         return obj.owner == request.user
 
+
+class IsRequestedArtist(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.user in obj.requested_artists.all()
+    
+
 class IsUserOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # Allow GET, HEAD, and OPTIONS requests.
@@ -27,3 +34,4 @@ class IsUserOrReadOnly(permissions.BasePermission):
 
         # Allow a user to update or delete themselves
         return request.user == obj
+    

@@ -2,6 +2,8 @@
 
 My final project for CS50w - knockoff Spotify - a web application built with Django, DRF and React
 
+The main difference is that a song/album can be associated with and managed by multiple artist profiles.
+
 backend is sort of complete
 
 ## setup  
@@ -62,11 +64,14 @@ Update details of a specific album.
 * DELETE /api/albums/{id}/  
 Delete a specific album.
 
-* POST /api/albums/{id}/manage_artists/  
-Add an artist to the list of artists associated with an album.
+* POST /api/albums/{id}/request_artist/  
+Request to add an artist to the list of artists associated with an album.
 
-* DELETE /api/albums/{id}/manage_artists/  
-Remove an artist from the list of artists associated with an album.
+* POST /api/albums/{id}/confirm_artist/  
+Confirm to be added as an artist to the list of artists associated with an album.
+
+* DELETE /api/albums/{id}/remove_artist/  
+Remove current user from the list of artists associated with an album.
 
 ### Song Endpoints
 * GET /api/songs/  
@@ -84,11 +89,14 @@ Update details of a specific song.
 * DELETE /api/songs/{id}/  
 Delete a specific song.
 
-* POST /api/songs/{id}/manage_artists/  
-Add an artist to the list of artists associated with a song.
+* POST /api/songs/{id}/request_artist/  
+Request to add an artist to the list of artists associated with a song.
 
-* DELETE /api/songs/{id}/manage_artists/  
-Remove an artist from the list of artists associated with a song.
+* POST /api/songs/{id}/confirm_artist/  
+Confirm to be added as an artist to the list of artists associated with a song.
+
+* DELETE /api/songs/{id}/remove_artist/  
+Remove current user from the list of artists associated with a song.
 
 * GET /api/songs/{id}/play/  
 Stream the audio file of a song.
@@ -103,7 +111,7 @@ Retrieve details of a specific playlist.
 * POST /api/playlists/  
 Create a new playlist.
 
-* PUT /api/playlists/{id}/  
+* PATCH /api/playlists/{id}/  
 Update details of a specific playlist.
 
 * DELETE /api/playlists/{id}/  
@@ -113,7 +121,7 @@ Delete a specific playlist.
 Add a song to a playlist.
 
 * DELETE /api/playlists/{id}/manage_songs/  
-Remvoe a song from a playlist.
+Remove a song from a playlist.
 
 ## Testing - CI
 **.github/workflows/ci.yml** The github action workflow, triggered on push events, runs Django unit tests for the project, ensuring seamless and automated testing.  
