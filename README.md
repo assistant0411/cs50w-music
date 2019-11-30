@@ -4,7 +4,7 @@ My final project for CS50w - knockoff Spotify - a web application built with Dja
 
 What makes this app unique is that a song/album can be associated with and managed by multiple artist profiles.
 
-backend is sort of complete
+backend is sort of complete  
 frontend is WIP
 
 ## setup  
