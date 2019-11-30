@@ -16,6 +16,7 @@ class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True},
             'email': {'write_only': True},
+            'id': {'read_only': True}
         }
 
     def validate(self, data):
@@ -58,7 +59,7 @@ class LoginUserSerializer(serializers.Serializer):
 class SongSerializer(serializers.ModelSerializer):
     class Meta:
         model = Song
-        exclude = ('artists',)
+        exclude = ('artists', 'requested_artists')
         extra_kwargs = {
             'audio_file': {'write_only': True},
         }
@@ -74,7 +75,7 @@ class SongSerializer(serializers.ModelSerializer):
 class AlbumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Album
-        exclude = ('artists',)        
+        exclude = ('artists', 'requested_artists')       
 
 
 class PlaylistSerializer(serializers.ModelSerializer):
