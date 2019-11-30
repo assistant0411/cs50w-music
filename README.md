@@ -16,7 +16,7 @@ backend is sort of complete
 `python manage.py runserver`  
 
 ## Endpoints  
-Appropriate permissions are set for security measures.  
+Authorization and api rate limitting are set for security measures.  
 For now all endpoints besides home page, register and login require authentication, which might change in the future.
 
 ### Home page
