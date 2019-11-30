@@ -86,6 +86,7 @@ class ArtistActionsMixin:
         """Add the current user to the artists list if they are in requested artists."""
         entity = self.get_object()
         entity.artists.add(request.user)
+        entity.requested_artists.remove(request.user)
         return Response({'detail': 'You hve successfully been added as an artist.'})
 
 class SongViewSet(ArtistActionsMixin, viewsets.ModelViewSet):
