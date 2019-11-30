@@ -7,10 +7,9 @@ from .serializers import UserSerializer, LoginUserSerializer, SongSerializer, Pl
 from rest_framework.response import Response
 from knox.models import AuthToken
 from rest_framework import filters
-from .permissions import IsArtistOrReadOnly, IsPlaylistOwnerOrReadOnly, IsUserOrReadOnly
+from .permissions import IsArtistOrReadOnly, IsPlaylistOwnerOrReadOnly, IsUserOrReadOnly, IsRequestedArtist
 from django.shortcuts import render
 from rest_framework import status
-from django.contrib.auth.hashers import check_password, make_password
 from rest_framework.decorators import action
 
 
@@ -53,24 +52,25 @@ class LoginAPI(generics.GenericAPIView):
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
             "token": AuthToken.objects.create(user)[1]
         })
+    
 
-
-class SongViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows Songs to be viewed or edited.
-    """
-    queryset = Song.objects.all().order_by('-release_date')
-    serializer_class = SongSerializer
-    permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
-
+class ArtistActionsMixin:
     def perform_create(self, serializer):
-        # Save the album and then add the current user to the artists
-        song = serializer.save()
-        song.artists.add(self.request.user)
+        """Add the current user to the list of artists"""
+        entity_instance = serializer.save()
+        entity_instance.artists.add(self.request.user)
 
-    @action(detail=True, methods=['post', 'delete'])
-    def manage_artists(self, request, pk=None):
-        song = self.get_object()
+    @action(detail=True, methods=['delete'])
+    def remove_artist(self, request, pk=None):
+        """Remove current user from the artists list"""
+        entity = self.get_object()
+        entity.artists.remove(self.request.user)
+        return Response({'detail': 'You have successfully been removed from the artists list.'})
+
+    @action(detail=True, methods=['post'])
+    def request_artist(self, request, pk=None):
+        """Request to add a user to the artists list"""
+        entity = self.get_object()
         artist_id = request.data.get('artist_id', None)
 
         try:
@@ -78,21 +78,39 @@ class SongViewSet(viewsets.ModelViewSet):
         except User.DoesNotExist:
             return Response({'detail': 'Invalid artist_id.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if request.method == 'POST':
-            song.artists.add(artist)
-            message = 'Artist added successfully.'
-        elif request.method == 'DELETE':
-            song.artists.remove(artist)
-            message = 'Artist removed successfully.'
+        entity.requested_artists.add(artist)
+        return Response({'detail': 'Artist requested successfully.'})
 
-        return Response({'detail': message})
-    
+    @action(detail=True, methods=['post'], permission_classes=[IsRequestedArtist])
+    def confirm_artist(self, request, pk=None):
+        """Add the current user to the artists list if they are in requested artists."""
+        entity = self.get_object()
+        entity.artists.add(request.user)
+        entity.requested_artists.remove(request.user)
+        return Response({'detail': 'You hve successfully been added as an artist.'})
+
+class SongViewSet(ArtistActionsMixin, viewsets.ModelViewSet):
+    """
+    API endpoint that allows Songs to be viewed or edited.
+    """
+    queryset = Song.objects.all().order_by('-release_date')
+    serializer_class = SongSerializer
+    permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
+
     @action(detail=True, methods=['get'])
     def play(self, request, pk=None):
         song = self.get_object()
         return FileResponse(song.audio_file, content_type='audio/mpeg')
 
-    
+
+class AlbumViewSet(ArtistActionsMixin, viewsets.ModelViewSet):
+    """
+    API endpoint that allows Albums to be viewed or edited.
+    """
+    queryset = Album.objects.all().order_by('-release_date')
+    serializer_class = AlbumSerializer
+    permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
+
 
 class PlaylistViewSet(viewsets.ModelViewSet):
     """
@@ -107,52 +125,21 @@ class PlaylistViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post', 'delete'])
     def manage_songs(self, request, pk=None):
-        album = self.get_object()
+        """Add or remove a song to/from a playlist."""
+
+        playlist = self.get_object()
         song_id = request.data.get('song_id', None)
 
-        try:
+        try:    
             song = Song.objects.get(pk=song_id)
         except Song.DoesNotExist:
             return Response({'detail': 'Invalid song_id.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if request.method == 'POST':
-            album.songs.add(song)
+            playlist.songs.add(song)
             message = 'Song added successfully.'
         elif request.method == 'DELETE':
-            album.songs.remove(song)
+            playlist.songs.remove(song)
             message = 'Song removed successfully.'
-
-        return Response({'detail': message})
-
-
-class AlbumViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows Albums to be viewed or edited.
-    """
-    queryset = Album.objects.all().order_by('-release_date')
-    serializer_class = AlbumSerializer
-    permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
-
-    def perform_create(self, serializer):
-        # Save the album and then add the current user to the artists
-        album = serializer.save()
-        album.artists.add(self.request.user)
-
-    @action(detail=True, methods=['post', 'delete'])
-    def manage_artists(self, request, pk=None):
-        album = self.get_object()
-        artist_id = request.data.get('artist_id', None)
-
-        try:
-            artist = User.objects.get(pk=artist_id)
-        except User.DoesNotExist:
-            return Response({'detail': 'Invalid artist_id.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if request.method == 'POST':
-            album.artists.add(artist)
-            message = 'Artist added successfully.'
-        elif request.method == 'DELETE':
-            album.artists.remove(artist)
-            message = 'Artist removed successfully.'
 
         return Response({'detail': message})
