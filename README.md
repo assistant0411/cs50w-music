@@ -10,8 +10,8 @@ frontend is WIP
 ## setup  
 `python3 -m venv env`  
 `source env/bin/activate`  
-`pip install -r requirements.txt`  
-`python manage.py migrate`  
+`pip install -r backend/requirements.txt`  
+`python backend/manage.py migrate`  
 
 ## run
 `python manage.py runserver`  
