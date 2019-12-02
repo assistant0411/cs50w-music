@@ -4,7 +4,7 @@ My final project for CS50w - knockoff Spotify - a web application built with Dja
 
 What makes this app unique is that a song/album can be associated with and managed by multiple artist profiles.
 
-backend is sort of complete  
+backend is sort of complete
 frontend is WIP
 
 ## setup  
@@ -13,12 +13,18 @@ frontend is WIP
 `pip install -r backend/requirements.txt`  
 `python backend/manage.py migrate`  
 
+`npm install --prefix frontend/`
+
 ## run
+Run these in separate terminals  
+
 `python backend/manage.py runserver`  
+
+`npm start  --prefix frontend/`
 
 ## Endpoints  
 Authorization and api rate limiting are set for security measures.  
-For now all endpoints besides home page, register and login require authentication, which might change in the future.
+For now all endpoints besides register and login require authentication, which might change in the future.
 
 ### User Endpoints  
 * GET /api/users/  
@@ -137,7 +143,7 @@ Confirm to be added as an artist to the list of artists associated with a song.
 Remove current user from the list of artists associated with a song.
 
 * GET /api/songs/{id}/play/  
-Stream the audio file of a song.
+Stream the audio file of a song. This is usually done by a CDN, but for this small project, this will do.
 
 ### Playlist Endpoints
 * GET /api/playlists/  
