@@ -14,7 +14,7 @@ frontend is WIP
 `python backend/manage.py migrate`  
 
 ## run
-`python manage.py runserver`  
+`python backend/manage.py runserver`  
 
 ## Endpoints  
 Authorization and api rate limiting are set for security measures.  
