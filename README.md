@@ -20,10 +20,6 @@ frontend is WIP
 Authorization and api rate limiting are set for security measures.  
 For now all endpoints besides home page, register and login require authentication, which might change in the future.
 
-### Home page
-* GET /  
-TODO
-
 ### User Endpoints  
 * GET /api/users/  
 Retrieve a list of all users.  
