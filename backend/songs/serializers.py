@@ -59,9 +59,10 @@ class LoginUserSerializer(serializers.Serializer):
 class SongSerializer(serializers.ModelSerializer):
     class Meta:
         model = Song
-        exclude = ('artists', 'requested_artists')
+        exclude = ('requested_artists',)
         extra_kwargs = {
             'audio_file': {'write_only': True},
+            'artists': {'read_only': True}
         }
 
     def validate_album(self, album):
@@ -75,7 +76,11 @@ class SongSerializer(serializers.ModelSerializer):
 class AlbumSerializer(serializers.ModelSerializer):
     class Meta:
         model = Album
-        exclude = ('artists', 'requested_artists')       
+        exclude = ('requested_artists',)
+        extra_kwargs = {
+            'audio_file': {'write_only': True},
+            'artists': {'read_only': True}
+        }    
 
 
 class PlaylistSerializer(serializers.ModelSerializer):
