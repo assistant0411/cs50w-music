@@ -13,10 +13,6 @@ from rest_framework import status
 from rest_framework.decorators import action
 
 
-def index(request):
-    return render(request, "songs/index.html")
-
-
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('username')
     permission_classes = [permissions.IsAuthenticated, IsUserOrReadOnly]
