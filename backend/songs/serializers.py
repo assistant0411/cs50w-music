@@ -15,7 +15,6 @@ class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
         fields = ('id', 'username', 'first_name', 'last_name', 'email', 'birth_date', 'country', 'password', 'password_confirmation', 'old_password')
         extra_kwargs = {
             'password': {'write_only': True},
-            'email': {'write_only': True},
             'id': {'read_only': True}
         }
 
@@ -34,6 +33,15 @@ class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
             )
 
         return data
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        """Exclude email for other users"""
+
+        if self.context['request'].user != instance:
+            del representation['email']
+
+        return representation
 
     def create(self, validated_data):
         validated_data.pop('password_confirmation')
