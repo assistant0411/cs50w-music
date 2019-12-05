@@ -4,7 +4,7 @@ My final project for CS50w - knockoff Spotify - a web application built with Dja
 
 What makes this app unique is that a song/album can be associated with and managed by multiple artist profiles.
 
-backend is sort of complete  
+backend is sort of complete
 frontend is WIP
 
 ## setup  
@@ -13,21 +13,32 @@ frontend is WIP
 `pip install -r backend/requirements.txt`  
 `python backend/manage.py migrate`  
 
+`npm install --prefix frontend/`
+
 ## run
+Run these in separate terminals  
+
 `python backend/manage.py runserver`  
 
-## Endpoints  
+`npm start  --prefix frontend/`
+
+## Frontend  
+http://127.0.0.1:3000/  
+
+## API Endpoints  
+base url http://127.0.0.1:8000/api/  
+
 Authorization and api rate limiting are set for security measures.  
-For now all endpoints besides home page, register and login require authentication, which might change in the future.
+For now all endpoints besides register and login require authentication, which might change in the future.
 
 ### User Endpoints  
-* GET /api/users/  
+* GET users/  
 Retrieve a list of all users.  
 
-* GET /api/users/{id}/  
+* GET users/{id}/  
 Retrieve details of a specific user.  
 
-* PATCH /api/users/{id}/  
+* PATCH users/{id}/  
 Modify details of a specific user. 
     * username  
     * old_password (required when changing the password)
@@ -39,12 +50,12 @@ Modify details of a specific user.
     * birth_date  
     * country
 
-* DELETE /api/users/{id}/  
+* DELETE users/{id}/  
 Set the a specific user as inactive.
 
 Django knox token authentication:
 
-* POST /api/register/  
+* POST register/  
 Register a new user and obtain an authentication token.
     * **username**  
     * **password**  
@@ -57,57 +68,57 @@ Register a new user and obtain an authentication token.
 
     The response contains the authentication token.
 
-* POST /api/login/  
+* POST login/  
 Log in and obtain an authentication token.  
     * **username**  
     * **password**  
 
-* POST /api/logout/
+* POST logout/
 Log out the current user.
 
-* POST /api/logoutall/  
+* POST logoutall/  
 Remove all tokens that the server has - forcing all clients to re-authenticate
 
 ### Album Endpoints
-* GET /api/albums/  
+* GET albums/  
 Retrieve a list of all albums.
 
-* GET /api/albums/{id}/  
+* GET albums/{id}/  
 Retrieve details of a specific album.
 
-* POST /api/albums/  
+* POST albums/  
 Create a new album.
     * **title**   
     * release_date  
     
     The current user is added in the artists list.
 
-* PATCH /api/albums/{id}/  
+* PATCH albums/{id}/  
 Update details of a specific album.
     * title   
     * release_date  
 
-* DELETE /api/albums/{id}/  
+* DELETE albums/{id}/  
 Delete a specific album.
 
-* POST /api/albums/{id}/request_artist/  
+* POST albums/{id}/request_artist/  
 Request to add an artist to the list of artists associated with an album.
     * **aritst_id**
 
-* POST /api/albums/{id}/confirm_artist/  
+* POST albums/{id}/confirm_artist/  
 Confirm to be added as an artist to the list of artists associated with an album.
 
-* DELETE /api/albums/{id}/remove_artist/  
+* DELETE albums/{id}/remove_artist/  
 Remove current user from the list of artists associated with an album.
 
 ### Song Endpoints
-* GET /api/songs/  
+* GET songs/  
 Retrieve a list of all songs.
 
-* GET /api/songs/{id}/  
+* GET songs/{id}/  
 Retrieve details of a specific song.
 
-* POST /api/songs/  
+* POST songs/  
 Create a new song.
     * **title**  
     * **audio_file**  
@@ -120,53 +131,54 @@ Create a new song.
     The current user is added in the artists list.
 
 
-* PATCH /api/songs/{id}/  
+* PATCH songs/{id}/  
 Update details of a specific song.
 
-* DELETE /api/songs/{id}/  
+* DELETE songs/{id}/  
 Delete a specific song.
 
-* POST /api/songs/{id}/request_artist/  
+* POST songs/{id}/request_artist/  
 Request to add an artist to the list of artists associated with a song.
     * **aritst_id**
 
-* POST /api/songs/{id}/confirm_artist/  
+* POST songs/{id}/confirm_artist/  
 Confirm to be added as an artist to the list of artists associated with a song.
 
-* DELETE /api/songs/{id}/remove_artist/  
+* DELETE songs/{id}/remove_artist/  
 Remove current user from the list of artists associated with a song.
 
-* GET /api/songs/{id}/play/  
-Stream the audio file of a song.
+* GET songs/{id}/play/  
+Stream the audio file of a song. This is usually done by a CDN, but for this small project, this will do.
 
 ### Playlist Endpoints
-* GET /api/playlists/  
+* GET playlists/  
 Retrieve a list of all playlists.
 
-* GET /api/playlists/{id}/  
+* GET playlists/{id}/  
 Retrieve details of a specific playlist.
 
-* POST /api/playlists/  
+* POST playlists/  
 Create a new playlist.
     * **title**
 
     The current user is set as the owner of the playlist and the timestamp created_at is set to now.
 
-* PATCH /api/playlists/{id}/  
+* PATCH playlists/{id}/  
 Update details of a specific playlist.
     * title
 
-* DELETE /api/playlists/{id}/  
+* DELETE playlists/{id}/  
 Delete a specific playlist.
 
-* POST /api/playlists/{id}/manage_songs/  
+* POST playlists/{id}/manage_songs/  
 Add a song to a playlist.
     * **song_id**
 
-* DELETE /api/playlists/{id}/manage_songs/  
+* DELETE playlists/{id}/manage_songs/  
 Remove a song from a playlist.
     * **song_id**
 
 ## Testing - CI
 **.github/workflows/ci.yml** The github action workflow, triggered on push events, runs Django unit tests for the project, ensuring seamless and automated testing.  
+`cd backend`
 `python3 manage.py test --settings=cs50w_music.settings_test`
