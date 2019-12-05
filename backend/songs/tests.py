@@ -270,11 +270,15 @@ class UserViewSetTest(AuthenticatedAPITests):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["username"], self.old_user.username)
 
-    def test_fail_user_detail_password_and_email(self):
-        """Make sure that user password and email are not being sent"""
+    def test_fail_user_detail_read_password(self):
+        """Make sure that user password not being sent"""
         response = self.client.get(reverse('songs:users-detail', args=[self.old_user.id]))
         with self.assertRaises(KeyError) as raises:
             response.json()["password"]
+
+    def test_fail_user_detail_read_another_user_email(self):
+        """Make sure that a user can't see another user's email"""
+        response = self.client.get(reverse('songs:users-detail', args=[self.old_user_2.id]))
         with self.assertRaises(KeyError) as raises:
             response.json()["email"]
         
