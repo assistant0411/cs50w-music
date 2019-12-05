@@ -56,7 +56,10 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:3000",  # react app
+]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "cs50w_music.urls"
 
