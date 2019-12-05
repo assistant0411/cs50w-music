@@ -33,7 +33,7 @@ const SignIn = () => {
       localStorage.setItem('token', response.data.token);
       navigate('/');
     } catch (error) {
-      setError('Invalid username or password');
+      setError(error.response?.data?.non_field_errors !== undefined ? error.response.data.non_field_errors : error.message);
       setIsLoading(false);
     }
   };
