@@ -25,6 +25,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class RegistrationAPI(generics.GenericAPIView):
+    authentication_classes = []
     serializer_class = UserSerializer
 
     def post(self, request, *args, **kwargs):
@@ -38,6 +39,7 @@ class RegistrationAPI(generics.GenericAPIView):
 
 
 class LoginAPI(generics.GenericAPIView):
+    authentication_classes = []
     serializer_class = LoginUserSerializer
 
     def post(self, request, *args, **kwargs):

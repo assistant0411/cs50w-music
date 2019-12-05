@@ -3,7 +3,7 @@ from rest_framework import serializers
 from .models import User, Song, Playlist, Album
 from django_countries.serializers import CountryFieldMixin
 from django.contrib.auth import authenticate
-from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.password_validation import validate_password as django_contrib_validate_password
 from django.contrib.auth.hashers import check_password
 
 
@@ -19,14 +19,19 @@ class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
             'id': {'read_only': True}
         }
 
+    # so that the raised error is not non_field_errors
+    def validate_password(self, password):
+        django_contrib_validate_password(password)
+        return password
+
     def validate(self, data):
         password = data.get('password')
         password_confirmation = data.get('password_confirmation')
 
-        if password:
-            validate_password(password)
-            if password != password_confirmation:
-                raise serializers.ValidationError("Passwords do not match.")
+        if password and password != password_confirmation:
+            raise serializers.ValidationError(
+                {"password_confirmation": "Password confirmation does not match password."}
+            )
 
         return data
 
@@ -37,10 +42,10 @@ class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
         
     def update(self, instance, validated_data):
         password = validated_data.get('password')
+        old_password = validated_data.get('old_password')
 
-        if password:
-             if not check_password(validated_data.get('old_password'), instance.password):
-                raise serializers.ValidationError("Old password is incorrect.")
+        if password and not check_password(old_password, instance.password):
+            raise serializers.ValidationError({"old_password": "Old password is incorrect."})
 
         return super().update(instance, validated_data)
     
@@ -68,7 +73,7 @@ class SongSerializer(serializers.ModelSerializer):
     def validate_album(self, album):
         # Check if the user is an artist of the album
         if self.context['request'].user not in album.artists.all():
-            raise serializers.ValidationError("You must be an artist of the album to add a song to it.")
+            raise serializers.ValidationError({"album": "You must be an artist of the album to add a song to it."})
         
         return album
 
