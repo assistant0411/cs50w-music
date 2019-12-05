@@ -77,7 +77,7 @@ class RegistrationAPITests(BaseAPITest):
         response = self.client.post(reverse('songs:user-register'), self.new_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.count(), 2) # self.old_user and old_user_2
-        self.assertEqual(response.json()["non_field_errors"][0], 'Passwords do not match.')
+        self.assertEqual(response.json()["password_confirmation"][0], 'Password confirmation does not match password.')
 
     def test_fail_user_registration_short_password(self):
         """User registration should fail if the provided password is less than 8 characters."""
@@ -85,7 +85,7 @@ class RegistrationAPITests(BaseAPITest):
         response = self.client.post(reverse('songs:user-register'), self.new_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(get_user_model().objects.count(), 2) # self.old_user and old_user_2
-        self.assertEqual(response.json()["non_field_errors"][0], 'This password is too short. It must contain at least 8 characters.')
+        self.assertEqual(response.json()["password"][0], 'This password is too short. It must contain at least 8 characters.')
 
     def test_fail_user_registration_future_birthday(self):
         """User registration should fail if the provided birth date is in the future."""
@@ -317,7 +317,7 @@ class UserViewSetTest(AuthenticatedAPITests):
         self.old_user.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(self.old_user.password, old_password)
-        self.assertEqual(response.json()[0], 'Old password is incorrect.')
+        self.assertEqual(response.json()["old_password"], 'Old password is incorrect.')
 
     def test_fail_user_detail_change_password_too_short(self):
         """Assert user cant change their password if they input a short new password"""
@@ -330,7 +330,7 @@ class UserViewSetTest(AuthenticatedAPITests):
         self.old_user.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(self.old_user.password, old_password)
-        self.assertEqual(response.json()["non_field_errors"][0], 'This password is too short. It must contain at least 8 characters.')
+        self.assertEqual(response.json()["password"][0], 'This password is too short. It must contain at least 8 characters.')
 
     def test_fail_user_detail_change_password_skip_password_confirmation(self):
         """Assert user cant change their password if they don't provide their old password"""
@@ -343,7 +343,7 @@ class UserViewSetTest(AuthenticatedAPITests):
         self.old_user.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(self.old_user.password, old_password)
-        self.assertEqual(response.json()["non_field_errors"][0], 'Passwords do not match.')
+        self.assertEqual(response.json()["password_confirmation"][0], 'Password confirmation does not match password.')
 
     def test_fail_user_detail_change_password_skip_old_password(self):
         """Assert user cant change their password if they don't privde password condirmation"""
@@ -356,7 +356,7 @@ class UserViewSetTest(AuthenticatedAPITests):
         self.old_user.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(self.old_user.password, old_password)
-        self.assertEqual(response.json()[0], 'Old password is incorrect.')
+        self.assertEqual(response.json()["old_password"], 'Old password is incorrect.')
 
     def test_fail_user_post(self):
         """A user should be created only using register"""
