@@ -18,7 +18,7 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsUserOrReadOnly]
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['username']
+    search_fields = ['username', 'country']
 
     def create(self, request, *args, **kwargs):
         return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -94,6 +94,8 @@ class SongViewSet(ArtistActionsMixin, viewsets.ModelViewSet):
     queryset = Song.objects.all().order_by('-release_date')
     serializer_class = SongSerializer
     permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title', 'artists']
 
     @action(detail=True, methods=['get'])
     def play(self, request, pk=None):
@@ -108,6 +110,8 @@ class AlbumViewSet(ArtistActionsMixin, viewsets.ModelViewSet):
     queryset = Album.objects.all().order_by('-release_date')
     serializer_class = AlbumSerializer
     permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title', 'artists']
 
 
 class PlaylistViewSet(viewsets.ModelViewSet):
@@ -117,6 +121,8 @@ class PlaylistViewSet(viewsets.ModelViewSet):
     queryset = Playlist.objects.all().order_by('-created_at')
     serializer_class = PlaylistSerializer
     permission_classes = [permissions.IsAuthenticated, IsPlaylistOwnerOrReadOnly]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title',]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
