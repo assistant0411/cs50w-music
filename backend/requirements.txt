@@ -3,4 +3,5 @@ djangorestframework
 django-rest-knox
 django_countries
 django-cleanup
+django-cors-headers
 Pillow

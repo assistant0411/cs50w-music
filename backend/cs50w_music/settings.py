@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'songs',
     'django_countries',
     'knox',
+    'corsheaders',
     'django_cleanup.apps.CleanupConfig', # Automatically delete files for FileField. Needs to be last in the installed apps list.
 ]
 
@@ -52,7 +53,13 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:3000",  # react app
+]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "cs50w_music.urls"
 
