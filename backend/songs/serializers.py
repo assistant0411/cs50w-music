@@ -75,7 +75,8 @@ class SongSerializer(serializers.ModelSerializer):
         exclude = ('requested_artists',)
         extra_kwargs = {
             'audio_file': {'write_only': True},
-            'artists': {'read_only': True}
+            'artists': {'read_only': True},
+            'song_cover_image': {'write_only': True},
         }
 
     def validate_album(self, album):
@@ -91,8 +92,8 @@ class AlbumSerializer(serializers.ModelSerializer):
         model = Album
         exclude = ('requested_artists',)
         extra_kwargs = {
-            'audio_file': {'write_only': True},
-            'artists': {'read_only': True}
+            'artists': {'read_only': True},
+            'album_cover_image': {'write_only': True},
         }    
 
 
