@@ -52,7 +52,7 @@ class LoginAPI(generics.GenericAPIView):
         })
     
 
-class ArtistActionsMixin:
+class SongAlbumMixin:
     def perform_create(self, serializer):
         """Add the current user to the list of artists"""
         entity_instance = serializer.save()
@@ -86,8 +86,17 @@ class ArtistActionsMixin:
         entity.artists.add(request.user)
         entity.requested_artists.remove(request.user)
         return Response({'detail': 'You hve successfully been added as an artist.'})
+    
+    @action(detail=True, methods=['get'])
+    def get_image(self, request, pk=None):
+        entity = self.get_object()
 
-class SongViewSet(ArtistActionsMixin, viewsets.ModelViewSet):
+        if entity.cover_image:
+            return FileResponse(entity.cover_image, 'image/*')
+        else:
+            return Response({'detail': 'Image not found'}, status=404)
+
+class SongViewSet(SongAlbumMixin, viewsets.ModelViewSet):
     """
     API endpoint that allows Songs to be viewed or edited.
     """
@@ -103,7 +112,7 @@ class SongViewSet(ArtistActionsMixin, viewsets.ModelViewSet):
         return FileResponse(song.audio_file, content_type='audio/mpeg')
 
 
-class AlbumViewSet(ArtistActionsMixin, viewsets.ModelViewSet):
+class AlbumViewSet(SongAlbumMixin, viewsets.ModelViewSet):
     """
     API endpoint that allows Albums to be viewed or edited.
     """
