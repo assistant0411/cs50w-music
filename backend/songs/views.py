@@ -127,11 +127,13 @@ class PlaylistViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Playlists to be viewed or edited.
     """
-    queryset = Playlist.objects.all().order_by('-created_at')
     serializer_class = PlaylistSerializer
     permission_classes = [IsPlaylistOwner, ]
     filter_backends = [filters.SearchFilter]
     search_fields = ['title',]
+
+    def get_queryset(self):
+        return Playlist.objects.filter(owner=self.request.user).order_by('-created_at')
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

@@ -458,12 +458,14 @@ class AuthSongTest(BaseAuthenticatedAPITest):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_create_song(self):
+        """Succesfully create a new song via post"""
         response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Song.objects.count(), 3)  # old_song, old_song_2 and new song
         self.assertEqual(response.json()["title"], self.new_song_data["title"])
 
     def test_fail_create_song_invalid_audio_file(self):
+        """Fail to create a new song with an unsuported audio file format"""
         self.new_song_data["audio_file"] = SimpleUploadedFile(name="test_image_file.png", content=b'test image file content', content_type='image/png')
         response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -478,6 +480,7 @@ class AuthSongTest(BaseAuthenticatedAPITest):
     #    self.assertRegex(response.json()["cover_image"][0], 'Upload a valid image. The file you uploaded was either not an image or a corrupted image.')
 
     def test_fail_create_song_invalid_genre(self):
+        """Fail to create a new song of an unsuported genre"""
         self.new_song_data["genre"] = 'invgenre'
         response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -485,6 +488,7 @@ class AuthSongTest(BaseAuthenticatedAPITest):
         self.assertRegex(response.json()["genre"][0], r'.*is not a valid choice.')
 
     def test_fail_create_song_future_release_date(self):
+        """Fail to create a new song whose release date is in the future"""
         self.new_song_data["release_date"] = self.tomorrow
         response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -492,6 +496,7 @@ class AuthSongTest(BaseAuthenticatedAPITest):
         self.assertRegex(response.json()["release_date"][0], r'Ensure this value is less than or equal to \d{4}-\d{2}-\d{2}.')
 
     def test_fail_create_song_invalid_album(self):
+        """Fail to create a new song associated with a non-existing album"""
         self.new_song_data["album"] = Album.objects.all().aggregate(Max("id"))["id__max"] + 1
         response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -499,6 +504,7 @@ class AuthSongTest(BaseAuthenticatedAPITest):
         self.assertRegex(response.json()["album"][0], r'Invalid pk ".*" - object does not exist.')
 
     def test_fail_create_song_invalid_duration(self):
+        """Fail to create a new song with duration less than 0 seconds"""
         self.new_song_data["duration"] = -1
         response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -506,6 +512,7 @@ class AuthSongTest(BaseAuthenticatedAPITest):
         self.assertEqual(response.json()["duration"][0], 'Ensure this value is greater than or equal to 0.')
 
     def test_fail_create_song_invalid_track_number(self):
+        """Fail to create a new song whose track number is less than 1."""
         self.new_song_data["track_number"] = -1
         response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -513,6 +520,7 @@ class AuthSongTest(BaseAuthenticatedAPITest):
         self.assertEqual(response.json()["track_number"][0], 'Ensure this value is greater than or equal to 1.')
 
     def test_fail_create_song_missing_title(self):
+        """Fail to create a new song with a blank title"""
         self.new_song_data.pop("title")
         response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -520,21 +528,25 @@ class AuthSongTest(BaseAuthenticatedAPITest):
         self.assertEqual(response.json()["title"][0], 'This field is required.')
 
     def test_update_song(self):
+        """Succesfully update song data"""
         response = self.client.put(reverse('songs:songs-detail', args=[self.old_song.id]), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["title"], self.new_song_data["title"])
 
     def test_update_song_title(self):
+        """Succesfully update song title"""
         response = self.client.patch(reverse('songs:songs-detail', args=[self.old_song.id]), {"title": self.new_song_data["title"]}, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["title"], self.new_song_data["title"])
 
     def test_update_song_audio_file(self):
+        """Succesfully update song audio file"""
         response = self.client.patch(reverse('songs:songs-detail', args=[self.old_song.id]), {"title": self.new_song_data["title"]}, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["title"], self.new_song_data["title"])
 
     def test_fail_update_album_by_other_artist(self):
+        """Fail to associate a song with an album by another user"""
         album = Album.objects.create(title="Old album")
         album.artists.add(self.old_user_2)
         response = self.client.patch(reverse('songs:songs-detail', args=[self.old_song.id]), {"album": album.id}, format='multipart')
@@ -546,7 +558,8 @@ class AuthSongTest(BaseAuthenticatedAPITest):
         response = self.client.delete(reverse('songs:songs-detail', args=[self.old_user.songs.first().id]))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-    def test_fail_update_song_by_another_user(self):
+    def test_fail_modify_song_by_another_user(self):
+        """Fail to modify a song by another artist"""
         response = self.client.post(reverse('songs:songs-detail', args=[self.old_song_2.id]), format='multipart')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertEqual(response.json()["detail"], 'Method "POST" not allowed.')
@@ -645,6 +658,14 @@ class AuthAlbumTest(BaseUnauthAlbumTest):
 
 
 class AuthAlbumTest(BaseAuthAlbumTest):       
+
+    def test_create_album(self):
+        """Succesfully create a new album via post"""
+        response = self.client.post(reverse('songs:albums-list'), data=self.new_album_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Album.objects.count(), 3)  # old_album, old_album_2 and new album
+        self.assertEqual(response.json()["title"], self.new_album_data["title"])
+
     def test_fail_album_list_not_allowed_methods(self):
         """Check that put, patch and delete methods are not allowed for album list"""
         # put
@@ -657,12 +678,6 @@ class AuthAlbumTest(BaseAuthAlbumTest):
         response = self.client.delete(reverse('songs:albums-list'))
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def test_create_album(self):
-        response = self.client.post(reverse('songs:albums-list'), data=self.new_album_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Album.objects.count(), 3)  # old_album, old_album_2 and new album
-        self.assertEqual(response.json()["title"], self.new_album_data["title"])
-
     #def test_fail_create_album_invalid_cover_image(self):
     #    self.new_album_data["cover_image"] = SimpleUploadedFile(name="test_cover_image.mp3", content=b'test audio file content', content_type='audio/mp3')
     #    response = self.client.post(reverse('songs:albums-list'), data=self.new_song_data, format='multipart')
@@ -671,6 +686,7 @@ class AuthAlbumTest(BaseAuthAlbumTest):
     #    self.assertRegex(response.json()["cover_image"][0], 'Upload a valid image. The file you uploaded was either not an image or a corrupted image.')
 
     def test_fail_create_album_future_release_date(self):
+        """Fail to create a new album whose release date is in the future"""
         self.new_album_data["release_date"] = self.tomorrow
         response = self.client.post(reverse('songs:albums-list'), data=self.new_album_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -678,6 +694,7 @@ class AuthAlbumTest(BaseAuthAlbumTest):
         self.assertRegex(response.json()["release_date"][0], r'Ensure this value is less than or equal to \d{4}-\d{2}-\d{2}.')
 
     def test_fail_create_album_missing_title(self):
+        """Fail to create a new album with a blank title"""
         self.new_album_data.pop("title")
         response = self.client.post(reverse('songs:albums-list'), data=self.new_album_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -685,11 +702,13 @@ class AuthAlbumTest(BaseAuthAlbumTest):
         self.assertEqual(response.json()["title"][0], 'This field is required.')
 
     def test_update_album(self):
+        """Succesfully update album data"""
         response = self.client.put(reverse('songs:albums-detail', args=[self.old_album.id]), data=self.new_album_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["title"], self.new_album_data["title"])
 
     def test_update_album_title(self):
+        """Succesfully update album title"""
         response = self.client.patch(reverse('songs:albums-detail', args=[self.old_album.id]), {"title": self.new_album_data["title"]}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["title"], self.new_album_data["title"])
@@ -699,7 +718,8 @@ class AuthAlbumTest(BaseAuthAlbumTest):
         response = self.client.delete(reverse('songs:albums-detail', args=[self.old_user.albums.first().id]))
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-    def test_fail_update_album_by_another_user(self):
+    def test_fail_modify_album_by_another_user(self):
+        """Fail to modify an album by another artist"""
         response = self.client.post(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertEqual(response.json()["detail"], 'Method "POST" not allowed.')
@@ -780,10 +800,10 @@ class BasAauthPlaylistTest(BaseUnauthPlaylistTest):
 class AuthPlaylistTest(BasAauthPlaylistTest):
 
     def test_playlist_list(self):
-        """Successfully list all playlists."""
+        """Successfully list all playlists by currrent user."""
         response = self.client.get(reverse('songs:playlists-list'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.json()["results"]), 2)  # old_playlist and old_playlist_2
+        self.assertEqual(len(response.json()["results"]), 1)  # old_playlist (old_playlist_2 is by another user)
 
     def test_fail_playlist_list_not_allowed_methods(self):
         """Check that put, patch and delete methods are not allowed for playlist list"""
@@ -798,6 +818,7 @@ class AuthPlaylistTest(BasAauthPlaylistTest):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_create_playlist(self):
+        """Succesfully create a new playlist via post"""
         response = self.client.post(reverse('songs:playlists-list'), data={"title": self.new_playlist_title}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Playlist.objects.count(), 3)  # old_playlist, old_playlist_2 and new playlist
@@ -805,6 +826,7 @@ class AuthPlaylistTest(BasAauthPlaylistTest):
         self.assertEqual(response.json()["owner"], self.old_user.id) # assert that old_user is set as playlist owner, because we are authenticated as old_user
 
     def test_fail_create_playlist_missing_title(self):
+        """Fail to create a new playlst with a blank title"""
         response = self.client.post(reverse('songs:playlists-list'), format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Playlist.objects.count(), 2)  # old_playlist and old_playlist_2
@@ -818,12 +840,20 @@ class AuthPlaylistTest(BasAauthPlaylistTest):
         self.assertEqual(response.json()["owner"], self.old_user.id) # assert that old_user is set as playlist owner, because we are authenticated as old_user
         self.assertEqual(response.json()['songs'], [song.id for song in self.old_playlist.songs.all()])
 
+    def test_fail_get_playlist_by_another_user(self):
+        """Fail to get details of another user's playlist"""
+        response = self.client.get(reverse('songs:playlists-detail', args=[self.old_playlist_2.id]))
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.json()["detail"], 'Not found.')
+
     def test_update_playlist_title(self):
+        """Succesfully update playlist title"""
         response = self.client.patch(reverse('songs:playlists-detail', args=[self.old_playlist.id]), {"title": self.new_playlist_title}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["title"], self.new_playlist_title)
 
     def test_fail_update_playlist_owner(self):
+        """Fail to change the owner of a playlist (assign your playlist to another user)"""
         response = self.client.patch(reverse('songs:playlists-detail', args=[self.old_playlist.id]), {"owner": self.old_user_2.id}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotEqual(response.json()["owner"], self.old_user_2.id)
@@ -834,21 +864,22 @@ class AuthPlaylistTest(BasAauthPlaylistTest):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_fail_update_playlist_by_another_user(self):
-        response = self.client.post(reverse('songs:playlists-detail', args=[self.old_playlist_2.id]), format='json')
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-        self.assertEqual(response.json()["detail"], 'Method "POST" not allowed.')
+        """Fail to modify a playlist by another user"""
+        response = self.client.patch(reverse('songs:playlists-detail', args=[self.old_playlist_2.id]), format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.json()["detail"], 'Not found.')
 
         response = self.client.put(reverse('songs:playlists-detail', args=[self.old_playlist_2.id]), format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.json()["detail"], 'Not found.')
 
         response = self.client.patch(reverse('songs:playlists-detail', args=[self.old_playlist_2.id]), format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.json()["detail"], 'Not found.')
 
         response = self.client.delete(reverse('songs:playlists-detail', args=[self.old_playlist_2.id]), format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.json()["detail"], 'Not found.')
 
     def test_add_song(self):
         """Add a song to a playlist"""
