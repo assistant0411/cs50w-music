@@ -8,6 +8,9 @@ from django.urls import reverse
 import datetime
 from django.db.models import Max
 from rest_framework.test import APITestCase
+from django.conf import settings
+import shutil, tempfile
+from django.test import override_settings
 
 
 class BaseAPITest(APITestCase):
@@ -194,6 +197,9 @@ class LoginAPITests(BaseAPITest):
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
+MEDIA_ROOT = tempfile.mkdtemp()
+
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
 class AuthenticatedAPITests(BaseAPITest):
     def setUp(self):
         super().setUp()
@@ -240,6 +246,11 @@ class AuthenticatedAPITests(BaseAPITest):
             'duration': 2010,
             'track_number': 3
         }
+
+    @classmethod
+    def tearDownClass(cls): 
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()
 
 
 class UserViewSetTest(AuthenticatedAPITests):
