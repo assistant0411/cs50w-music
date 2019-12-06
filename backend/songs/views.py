@@ -7,7 +7,7 @@ from .serializers import UserSerializer, LoginUserSerializer, SongSerializer, Pl
 from rest_framework.response import Response
 from knox.models import AuthToken
 from rest_framework import filters
-from .permissions import IsArtistOrReadOnly, IsPlaylistOwnerOrReadOnly, IsUserOrReadOnly, IsRequestedArtist
+from .permissions import IsArtistOrReadOnly, IsPlaylistOwner, IsUserOrReadOnly, IsRequestedArtist
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import action
@@ -15,7 +15,7 @@ from rest_framework.decorators import action
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('username')
-    permission_classes = [permissions.IsAuthenticated, IsUserOrReadOnly]
+    permission_classes = [IsUserOrReadOnly,]
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['username', 'country']
@@ -102,7 +102,7 @@ class SongViewSet(SongAlbumMixin, viewsets.ModelViewSet):
     """
     queryset = Song.objects.all().order_by('-release_date')
     serializer_class = SongSerializer
-    permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
+    permission_classes = [IsArtistOrReadOnly,]
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'artists']
 
@@ -118,7 +118,7 @@ class AlbumViewSet(SongAlbumMixin, viewsets.ModelViewSet):
     """
     queryset = Album.objects.all().order_by('-release_date')
     serializer_class = AlbumSerializer
-    permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
+    permission_classes = [IsArtistOrReadOnly, ]
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'artists']
 
@@ -129,7 +129,7 @@ class PlaylistViewSet(viewsets.ModelViewSet):
     """
     queryset = Playlist.objects.all().order_by('-created_at')
     serializer_class = PlaylistSerializer
-    permission_classes = [permissions.IsAuthenticated, IsPlaylistOwnerOrReadOnly]
+    permission_classes = [IsPlaylistOwner, ]
     filter_backends = [filters.SearchFilter]
     search_fields = ['title',]
 

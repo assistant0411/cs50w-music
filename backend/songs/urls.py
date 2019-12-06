@@ -2,6 +2,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from songs import views
 from knox import views as knox_views
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 app_name = 'songs'
@@ -20,3 +22,6 @@ urlpatterns = [
     path('api/logout/', knox_views.LogoutView.as_view(), name='knox-logout'),
     path('api/logoutall/',knox_views.LogoutAllView.as_view(), name='knox-logout-all'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

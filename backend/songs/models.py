@@ -28,7 +28,7 @@ class Album(models.Model):
     artists = models.ManyToManyField(User, related_name="albums", blank=True)  # blank because request.user is added to the artists in the view
     requested_artists = models.ManyToManyField(User, related_name="albums_requested_artist", blank=True)
     release_date = models.DateField(null=True, blank=True, default=date.today, validators=[MaxValueValidator(limit_value=date.today)])
-    cover_image = models.ImageField(upload_to='albums/images', blank=True, null=True, validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png'])])
+    cover_image = models.ImageField(upload_to='albums/images', blank=True, null=True)
 
 
     def __str__(self):
@@ -48,9 +48,9 @@ class Song(models.Model):
     requested_artists = models.ManyToManyField(User, related_name="songs_requested_artist", blank=True)
     genre = models.CharField(max_length=20, blank=True, null=True, choices=[(g, g) for g in GENRE_CHOICES])
     album = models.ForeignKey(Album, blank=True, null=True, on_delete=models.SET_NULL, related_name="songs")
-    duration = models.PositiveIntegerField(blank=True, null=True)
+    duration = models.PositiveIntegerField(blank=True, null=True, validators=[MinValueValidator(0)])  # I put this validator so that i get a http response instead of integrity error
     track_number = models.PositiveIntegerField(blank=True, null=True, validators=[MinValueValidator(1)])
-    cover_image = models.ImageField(upload_to='songs/images', blank=True, null=True, validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png'])])
+    cover_image = models.ImageField(upload_to='songs/images', blank=True, null=True)
 
     def __str__(self):
         return f"Song '{self.title}' by {', '.join([str(artist) for artist in self.artists.all()])}"

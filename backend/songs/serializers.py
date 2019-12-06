@@ -74,15 +74,13 @@ class SongSerializer(serializers.ModelSerializer):
         model = Song
         exclude = ('requested_artists',)
         extra_kwargs = {
-            'audio_file': {'write_only': True},
             'artists': {'read_only': True},
-            'song_cover_image': {'write_only': True},
         }
 
     def validate_album(self, album):
         # Check if the user is an artist of the album
         if self.context['request'].user not in album.artists.all():
-            raise serializers.ValidationError({"album": "You must be an artist of the album to add a song to it."})
+            raise serializers.ValidationError("You must be an artist of the album to add a song to it.")
         
         return album
 
@@ -93,7 +91,6 @@ class AlbumSerializer(serializers.ModelSerializer):
         exclude = ('requested_artists',)
         extra_kwargs = {
             'artists': {'read_only': True},
-            'album_cover_image': {'write_only': True},
         }    
 
 

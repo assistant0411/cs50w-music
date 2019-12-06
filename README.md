@@ -95,8 +95,9 @@ Create a new album.
 
 * PATCH albums/{id}/  
 Update details of a specific album.
-    * title   
-    * release_date  
+    * title
+    * release_date
+    * cover_image
 
 * DELETE albums/{id}/  
 Delete a specific album.
@@ -127,6 +128,7 @@ Create a new song.
     * album_id
     * duration (in seconds)
     * track_number (In the album)
+    * cover_image
     
     The current user is added in the artists list.
 

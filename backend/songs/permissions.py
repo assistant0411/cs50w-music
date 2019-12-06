@@ -11,13 +11,9 @@ class IsArtistOrReadOnly(permissions.BasePermission):
         return request.user in obj.artists.all()
 
 
-class IsPlaylistOwnerOrReadOnly(permissions.BasePermission):
+class IsPlaylistOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        # Allow GET, HEAD, and OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        # Deny permission for editing or deleting if the user is not the owner.
+        # Deny permission if the user is not the owner.
         return obj.owner == request.user
 
 
