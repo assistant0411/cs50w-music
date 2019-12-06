@@ -28,7 +28,8 @@ class Album(models.Model):
     artists = models.ManyToManyField(User, related_name="albums", blank=True)  # blank because request.user is added to the artists in the view
     requested_artists = models.ManyToManyField(User, related_name="albums_requested_artist", blank=True)
     release_date = models.DateField(null=True, blank=True, default=date.today, validators=[MaxValueValidator(limit_value=date.today)])
-    cover_image = models.ImageField(upload_to='albums/images', blank=True, null=True)
+    cover_image = models.ImageField(upload_to='albums/images', blank=True, null=True, validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png'])])
+
 
     def __str__(self):
         return f"Album '{self.title}' by {', '.join([str(artist) for artist in self.artists.all()])}"
@@ -49,7 +50,7 @@ class Song(models.Model):
     album = models.ForeignKey(Album, blank=True, null=True, on_delete=models.SET_NULL, related_name="songs")
     duration = models.PositiveIntegerField(blank=True, null=True)
     track_number = models.PositiveIntegerField(blank=True, null=True, validators=[MinValueValidator(1)])
-    cover_image = models.ImageField(upload_to='songs/images', blank=True, null=True)
+    cover_image = models.ImageField(upload_to='songs/images', blank=True, null=True, validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png'])])
 
     def __str__(self):
         return f"Song '{self.title}' by {', '.join([str(artist) for artist in self.artists.all()])}"
