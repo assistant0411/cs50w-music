@@ -1,9 +1,13 @@
 import React from 'react';
 import Songlist from './SongList';
+import Navbar from './Navbar';
 
 const Home = () => {
   return (
-    <Songlist />
+    <>
+      <Navbar />
+      <Songlist />
+    </>
   );
 };
 
