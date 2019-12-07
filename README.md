@@ -95,8 +95,9 @@ Create a new album.
 
 * PATCH albums/{id}/  
 Update details of a specific album.
-    * title   
-    * release_date  
+    * title
+    * release_date
+    * cover_image
 
 * DELETE albums/{id}/  
 Delete a specific album.
@@ -105,11 +106,19 @@ Delete a specific album.
 Request to add an artist to the list of artists associated with an album.
     * **aritst_id**
 
+* DELETE albums/{id}/remove_requested_artist/  
+Remove an artist from requested artists.
+    * **aritst_id**
+
 * POST albums/{id}/confirm_artist/  
 Confirm to be added as an artist to the list of artists associated with an album.
 
-* DELETE albums/{id}/remove_artist/  
+* DELETE albums/{id}/remove_current_user_as_artist/  
 Remove current user from the list of artists associated with an album.
+
+* GET albums/{id}/get_image/  
+Stream the cover image file of an album.  
+(unused) (instead serve static files from media in development; CDN would be more appropriate in production)
 
 ### Song Endpoints
 * GET songs/  
@@ -127,6 +136,7 @@ Create a new song.
     * album_id
     * duration (in seconds)
     * track_number (In the album)
+    * cover_image
     
     The current user is added in the artists list.
 
@@ -141,14 +151,24 @@ Delete a specific song.
 Request to add an artist to the list of artists associated with a song.
     * **aritst_id**
 
+* DELETE songs/{id}/remove_requested_artist/  
+Remove an artist from requested artists.
+    * **aritst_id**
+
 * POST songs/{id}/confirm_artist/  
 Confirm to be added as an artist to the list of artists associated with a song.
 
-* DELETE songs/{id}/remove_artist/  
+* DELETE songs/{id}/remove_current_user_as_artist/  
 Remove current user from the list of artists associated with a song.
 
 * GET songs/{id}/play/  
-Stream the audio file of a song. This is usually done by a CDN, but for this small project, this will do.
+Stream the audio file of a song.  
+(unused) (instead serve static files from media in development; CDN would be more appropriate in production)
+
+* GET songs/{id}/get_image/  
+Stream the cover image file of a song.  
+(unused) (instead serve static files from media in development; CDN would be more appropriate in production)
+
 
 ### Playlist Endpoints
 * GET playlists/  

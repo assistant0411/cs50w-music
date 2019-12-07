@@ -7,7 +7,7 @@ from .serializers import UserSerializer, LoginUserSerializer, SongSerializer, Pl
 from rest_framework.response import Response
 from knox.models import AuthToken
 from rest_framework import filters
-from .permissions import IsArtistOrReadOnly, IsPlaylistOwnerOrReadOnly, IsUserOrReadOnly, IsRequestedArtist
+from .permissions import IsArtistOrReadOnly, IsPlaylistOwner, IsUserOrReadOnly, IsRequestedArtist
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import action
@@ -15,7 +15,7 @@ from rest_framework.decorators import action
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by('username')
-    permission_classes = [permissions.IsAuthenticated, IsUserOrReadOnly]
+    permission_classes = [IsUserOrReadOnly,]
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['username', 'country']
@@ -59,7 +59,7 @@ class SongAlbumMixin:
         entity_instance.artists.add(self.request.user)
 
     @action(detail=True, methods=['delete'])
-    def remove_artist(self, request, pk=None):
+    def remove_current_user_as_artist(self, request, pk=None):
         """Remove current user from the artists list"""
         entity = self.get_object()
         entity.artists.remove(self.request.user)
@@ -74,10 +74,24 @@ class SongAlbumMixin:
         try:
             artist = User.objects.get(pk=artist_id)
         except User.DoesNotExist:
-            return Response({'detail': 'Invalid artist_id.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'artist_id': 'Invalid artist.'}, status=status.HTTP_400_BAD_REQUEST)
 
         entity.requested_artists.add(artist)
         return Response({'detail': 'Artist requested successfully.'})
+    
+    @action(detail=True, methods=['delete'])
+    def remove_requested_artist(self, request, pk=None):
+        """Remove an artist from requested artists."""
+        entity = self.get_object()
+        artist_id = request.data.get('artist_id', None)
+
+        try:
+            artist = User.objects.get(pk=artist_id)
+        except User.DoesNotExist:
+            return Response({'artist_id': 'Invalid artist.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        entity.requested_artists.remove(artist)
+        return Response({'detail': 'Artist successfully removed from requested artists.'})
 
     @action(detail=True, methods=['post'], permission_classes=[IsRequestedArtist])
     def confirm_artist(self, request, pk=None):
@@ -102,7 +116,7 @@ class SongViewSet(SongAlbumMixin, viewsets.ModelViewSet):
     """
     queryset = Song.objects.all().order_by('-release_date')
     serializer_class = SongSerializer
-    permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
+    permission_classes = [IsArtistOrReadOnly,]
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'artists']
 
@@ -118,7 +132,7 @@ class AlbumViewSet(SongAlbumMixin, viewsets.ModelViewSet):
     """
     queryset = Album.objects.all().order_by('-release_date')
     serializer_class = AlbumSerializer
-    permission_classes = [permissions.IsAuthenticated, IsArtistOrReadOnly]
+    permission_classes = [IsArtistOrReadOnly, ]
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'artists']
 
@@ -127,11 +141,13 @@ class PlaylistViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows Playlists to be viewed or edited.
     """
-    queryset = Playlist.objects.all().order_by('-created_at')
     serializer_class = PlaylistSerializer
-    permission_classes = [permissions.IsAuthenticated, IsPlaylistOwnerOrReadOnly]
+    permission_classes = [IsPlaylistOwner, ]
     filter_backends = [filters.SearchFilter]
     search_fields = ['title',]
+
+    def get_queryset(self):
+        return Playlist.objects.filter(owner=self.request.user).order_by('-created_at')
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
