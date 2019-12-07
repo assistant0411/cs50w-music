@@ -1,4 +1,3 @@
-from django.test import Client, TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
@@ -8,7 +7,6 @@ from django.urls import reverse
 import datetime
 from django.db.models import Max
 from rest_framework.test import APITestCase
-from django.conf import settings
 import shutil, tempfile
 from django.test import override_settings
 
@@ -204,11 +202,14 @@ class BaseUnauthenticatedAPITest(BaseAPITest):
     def setUp(self):
         super().setUp()
 
+        # simple dummy image for tests - png consisting of 1 white pixel
+        image_content = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\xff\xff?\x00\x05\xfe\x02\xfe\r\xefF\xb8\x00\x00\x00\x00IEND\xaeB`\x82'
+
         self.old_album_data = {
             'title': 'Old album',
             'release_date': self.yesterday,
             'artists': [self.old_user.id],
-            #'cover_image': SimpleUploadedFile(name="old_album_cover_image.png", content=image_content, content_type='image/png'),
+            'cover_image': SimpleUploadedFile(name="old_album_cover_image.png", content=image_content, content_type='image/png'),
         }
 
         # create an album and then set artists to prevent TypeError 
@@ -219,7 +220,7 @@ class BaseUnauthenticatedAPITest(BaseAPITest):
         self.old_song_data = {
             'title': 'Old song',
             'audio_file': SimpleUploadedFile(name="old_audio_file.mp3", content=b'Old audio file content', content_type='audio/mp3'),
-            #'cover_image': SimpleUploadedFile(name="old_song_cover_image.png", content=image_content, content_type='image/png'),
+            'cover_image': SimpleUploadedFile(name="old_song_cover_image.png", content=image_content, content_type='image/png'),
             'release_date': self.yesterday,
             'artists': [self.old_user.id],
             'genre': 'pop',
@@ -240,7 +241,7 @@ class BaseUnauthenticatedAPITest(BaseAPITest):
         self.new_song_data = {
             'title': 'Old song',
             'audio_file': SimpleUploadedFile(name="new_audio_file.mp3", content=b'new audio file content', content_type='audio/mp3'),
-            #'cover_image': SimpleUploadedFile(name="new_song_cover_image.png", content=image_content, content_type='image/png'),
+            'cover_image': SimpleUploadedFile(name="new_song_cover_image.png", content=image_content, content_type='image/png'),
             'release_date': self.yesterday,
             'artists': [self.old_user.id],
             'genre': 'rap',
@@ -466,18 +467,19 @@ class AuthSongTest(BaseAuthenticatedAPITest):
 
     def test_fail_create_song_invalid_audio_file(self):
         """Fail to create a new song with an unsuported audio file format"""
-        self.new_song_data["audio_file"] = SimpleUploadedFile(name="test_image_file.png", content=b'test image file content', content_type='image/png')
+        self.new_song_data["audio_file"] = self.new_song_data["cover_image"]
         response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Song.objects.count(), 2)  # old_song and old_song_2
         self.assertRegex(response.json()["audio_file"][0], r'File extension .* is not allowed. Allowed extensions are: mp3, wav, ogg.')
 
-    #def test_fail_create_song_invalid_cover_image(self):
-    #    self.new_song_data["cover_image"] = SimpleUploadedFile(name="test_cover_image.mp3", content=b'test audio file content', content_type='audio/mp3')
-    #    response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
-    #    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #    self.assertEqual(Song.objects.count(), 2)  # old_song and old_song_2
-    #    self.assertRegex(response.json()["cover_image"][0], 'Upload a valid image. The file you uploaded was either not an image or a corrupted image.')
+    def test_fail_create_song_invalid_cover_image(self):
+        """Fail to create a new song with an unsuported image file format"""
+        self.new_song_data["cover_image"] = SimpleUploadedFile(name="temp_audio_file.mp3", content=b'temp audio file content', content_type='audio/mp3')
+        response = self.client.post(reverse('songs:songs-list'), data=self.new_song_data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Song.objects.count(), 2)  # old_song and old_song_2
+        self.assertRegex(response.json()["cover_image"][0], 'Upload a valid image. The file you uploaded was either not an image or a corrupted image.')
 
     def test_fail_create_song_invalid_genre(self):
         """Fail to create a new song of an unsuported genre"""
@@ -661,7 +663,7 @@ class AuthAlbumTest(BaseAuthAlbumTest):
 
     def test_create_album(self):
         """Succesfully create a new album via post"""
-        response = self.client.post(reverse('songs:albums-list'), data=self.new_album_data, format='json')
+        response = self.client.post(reverse('songs:albums-list'), data=self.new_album_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Album.objects.count(), 3)  # old_album, old_album_2 and new album
         self.assertEqual(response.json()["title"], self.new_album_data["title"])
@@ -678,12 +680,13 @@ class AuthAlbumTest(BaseAuthAlbumTest):
         response = self.client.delete(reverse('songs:albums-list'))
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    #def test_fail_create_album_invalid_cover_image(self):
-    #    self.new_album_data["cover_image"] = SimpleUploadedFile(name="test_cover_image.mp3", content=b'test audio file content', content_type='audio/mp3')
-    #    response = self.client.post(reverse('songs:albums-list'), data=self.new_song_data, format='multipart')
-    #    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    #    self.assertEqual(Album.objects.count(), 2)  # old_song and old_song_2
-    #    self.assertRegex(response.json()["cover_image"][0], 'Upload a valid image. The file you uploaded was either not an image or a corrupted image.')
+    def test_fail_create_album_invalid_cover_image(self):
+        """Fail to create a new album with an unsuported image file format"""
+        self.new_album_data["cover_image"] = SimpleUploadedFile(name="temp_audio_file.mp3", content=b'temp audio file content', content_type='audio/mp3')
+        response = self.client.post(reverse('songs:albums-list'), data=self.new_album_data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Album.objects.count(), 2)  # old_album and old_album_2
+        self.assertRegex(response.json()["cover_image"][0], 'Upload a valid image. The file you uploaded was either not an image or a corrupted image.')
 
     def test_fail_create_album_future_release_date(self):
         """Fail to create a new album whose release date is in the future"""
@@ -696,20 +699,20 @@ class AuthAlbumTest(BaseAuthAlbumTest):
     def test_fail_create_album_missing_title(self):
         """Fail to create a new album with a blank title"""
         self.new_album_data.pop("title")
-        response = self.client.post(reverse('songs:albums-list'), data=self.new_album_data, format='json')
+        response = self.client.post(reverse('songs:albums-list'), data=self.new_album_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Album.objects.count(), 2)  # old_album and old_album_2
         self.assertEqual(response.json()["title"][0], 'This field is required.')
 
     def test_update_album(self):
         """Succesfully update album data"""
-        response = self.client.put(reverse('songs:albums-detail', args=[self.old_album.id]), data=self.new_album_data, format='json')
+        response = self.client.put(reverse('songs:albums-detail', args=[self.old_album.id]), data=self.new_album_data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["title"], self.new_album_data["title"])
 
     def test_update_album_title(self):
         """Succesfully update album title"""
-        response = self.client.patch(reverse('songs:albums-detail', args=[self.old_album.id]), {"title": self.new_album_data["title"]}, format='json')
+        response = self.client.patch(reverse('songs:albums-detail', args=[self.old_album.id]), {"title": self.new_album_data["title"]}, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()["title"], self.new_album_data["title"])
 
@@ -720,19 +723,19 @@ class AuthAlbumTest(BaseAuthAlbumTest):
 
     def test_fail_modify_album_by_another_user(self):
         """Fail to modify an album by another artist"""
-        response = self.client.post(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='json')
+        response = self.client.post(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='multipart')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         self.assertEqual(response.json()["detail"], 'Method "POST" not allowed.')
 
-        response = self.client.put(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='json')
+        response = self.client.put(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='multipart')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
 
-        response = self.client.patch(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='json')
+        response = self.client.patch(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='multipart')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
 
-        response = self.client.delete(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='json')
+        response = self.client.delete(reverse('songs:albums-detail', args=[self.old_album_2.id]), format='multipart')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.json()["detail"], 'You do not have permission to perform this action.')
 
