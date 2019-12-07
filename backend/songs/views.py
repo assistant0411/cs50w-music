@@ -59,7 +59,7 @@ class SongAlbumMixin:
         entity_instance.artists.add(self.request.user)
 
     @action(detail=True, methods=['delete'])
-    def remove_artist(self, request, pk=None):
+    def remove_current_user_as_artist(self, request, pk=None):
         """Remove current user from the artists list"""
         entity = self.get_object()
         entity.artists.remove(self.request.user)
@@ -74,10 +74,24 @@ class SongAlbumMixin:
         try:
             artist = User.objects.get(pk=artist_id)
         except User.DoesNotExist:
-            return Response({'detail': 'Invalid artist_id.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'artist_id': 'Invalid artist.'}, status=status.HTTP_400_BAD_REQUEST)
 
         entity.requested_artists.add(artist)
         return Response({'detail': 'Artist requested successfully.'})
+    
+    @action(detail=True, methods=['delete'])
+    def remove_requested_artist(self, request, pk=None):
+        """Remove an artist from requested artists."""
+        entity = self.get_object()
+        artist_id = request.data.get('artist_id', None)
+
+        try:
+            artist = User.objects.get(pk=artist_id)
+        except User.DoesNotExist:
+            return Response({'artist_id': 'Invalid artist.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        entity.requested_artists.remove(artist)
+        return Response({'detail': 'Artist successfully removed from requested artists.'})
 
     @action(detail=True, methods=['post'], permission_classes=[IsRequestedArtist])
     def confirm_artist(self, request, pk=None):
