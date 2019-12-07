@@ -4,7 +4,7 @@ My final project for CS50w - knockoff Spotify - a web application built with Dja
 
 What makes this app unique is that a song/album can be associated with and managed by multiple artist profiles.
 
-backend is sort of complete
+backend is sort of complete  
 frontend is WIP
 
 ## setup  
@@ -29,7 +29,6 @@ http://127.0.0.1:3000/
 base url http://127.0.0.1:8000/api/  
 
 Authorization and api rate limiting are set for security measures.  
-For now all endpoints besides register and login require authentication, which might change in the future.
 
 ### User Endpoints  
 * GET users/  
