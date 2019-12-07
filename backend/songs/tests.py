@@ -591,7 +591,7 @@ class AuthSongTest(BaseAuthenticatedAPITest):
 
         #confirm to be added as an artist
         self.client.force_authenticate(user=self.old_user_2)
-        custom_action_url = f'{detail_url}confirm_artist/'
+        custom_action_url = f'{detail_url}confirm_current_user_as_artist/'
         response = self.client.post(custom_action_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(self.old_user_2 in self.old_song.requested_artists.all())
@@ -771,7 +771,7 @@ class AuthAlbumTest(BaseAuthAlbumTest):
 
         #confirm to be added as an artist
         self.client.force_authenticate(user=self.old_user_2)
-        custom_action_url = f'{detail_url}confirm_artist/'
+        custom_action_url = f'{detail_url}confirm_current_user_as_artist/'
         response = self.client.post(custom_action_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(self.old_user_2 in self.old_album.requested_artists.all())

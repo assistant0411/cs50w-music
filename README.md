@@ -110,7 +110,7 @@ Request to add an artist to the list of artists associated with an album.
 Remove an artist from requested artists.
     * **aritst_id**
 
-* POST albums/{id}/confirm_artist/  
+* POST albums/{id}/confirm_current_user_as_artist/  
 Confirm to be added as an artist to the list of artists associated with an album.
 
 * DELETE albums/{id}/remove_current_user_as_artist/  
@@ -155,7 +155,7 @@ Request to add an artist to the list of artists associated with a song.
 Remove an artist from requested artists.
     * **aritst_id**
 
-* POST songs/{id}/confirm_artist/  
+* POST songs/{id}/confirm_current_user_as_artist/  
 Confirm to be added as an artist to the list of artists associated with a song.
 
 * DELETE songs/{id}/remove_current_user_as_artist/  

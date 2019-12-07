@@ -94,7 +94,7 @@ class SongAlbumMixin:
         return Response({'detail': 'Artist successfully removed from requested artists.'})
 
     @action(detail=True, methods=['post'], permission_classes=[IsRequestedArtist])
-    def confirm_artist(self, request, pk=None):
+    def confirm_current_user_as_artist(self, request, pk=None):
         """Add the current user to the artists list if they are in requested artists."""
         entity = self.get_object()
         entity.artists.add(request.user)
