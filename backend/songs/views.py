@@ -1,16 +1,14 @@
-from rest_framework import viewsets, permissions, generics
+from rest_framework import viewsets, generics
 from django.http import FileResponse
-from django.shortcuts import get_object_or_404
-from rest_framework.views import APIView
 from .models import User, Song, Playlist, Album
-from .serializers import UserSerializer, LoginUserSerializer, SongSerializer, PlaylistSerializer, AlbumSerializer
+from .serializers import UserSerializer, LoginUserSerializer, SongSerializer, PlaylistSerializer, AlbumSerializer, NotificationSerializer
 from rest_framework.response import Response
 from knox.models import AuthToken
 from rest_framework import filters
 from .permissions import IsArtistOrReadOnly, IsPlaylistOwner, IsUserOrReadOnly, IsRequestedArtist
-from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import action
+from notifications.signals import notify
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -77,6 +75,10 @@ class SongAlbumMixin:
             return Response({'artist_id': 'Invalid artist.'}, status=status.HTTP_400_BAD_REQUEST)
 
         entity.requested_artists.add(artist)
+
+        verb = f'{request.user} requested to add you as an artist of {entity}'
+        notify.send(request.user, recipient=artist, verb=verb, target=entity, public=False)
+        
         return Response({'detail': 'Artist requested successfully.'})
     
     @action(detail=True, methods=['delete'])
@@ -91,6 +93,10 @@ class SongAlbumMixin:
             return Response({'artist_id': 'Invalid artist.'}, status=status.HTTP_400_BAD_REQUEST)
 
         entity.requested_artists.remove(artist)
+
+        verb = f'{request.user} canceled the request to add you as an artist of {entity}'
+        notify.send(request.user, recipient=artist, verb=verb, target=entity, public=False)
+
         return Response({'detail': 'Artist successfully removed from requested artists.'})
 
     @action(detail=True, methods=['post'], permission_classes=[IsRequestedArtist])
@@ -99,6 +105,11 @@ class SongAlbumMixin:
         entity = self.get_object()
         entity.artists.add(request.user)
         entity.requested_artists.remove(request.user)
+
+        verb = f'{request.user.username} confirmed the request to be added an artist of {entity}'
+        for artist in entity.artists.exclude(pk=request.user.id):
+            notify.send(request.user, recipient=artist, verb=verb, target=entity, public=False)
+
         return Response({'detail': 'You hve successfully been added as an artist.'})
     
     @action(detail=True, methods=['get'])
