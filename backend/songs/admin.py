@@ -41,6 +41,7 @@ admin.site.register(Song, SongAdmin)
 #    model = Song
 #    extra = 0
 
+
 class AlbumAdmin(admin.ModelAdmin):
     # inlines = (AlbumSongInline,)
     filter_horizontal = ("artists", )

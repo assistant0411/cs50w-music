@@ -6,10 +6,11 @@ from .permissions import IsArtistOrReadOnly, IsPlaylistOwner, IsUserOrReadOnly, 
 from rest_framework import viewsets, generics, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .serializers import UserSerializer, LoginUserSerializer, SongSerializer, PlaylistSerializer, AlbumSerializer, NotificationSerializer
+from .serializers import UserSerializer, LoginUserSerializer, SongSerializer, PlaylistSerializer, AlbumSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """API endpoint that allows Users to be viewed or edited."""
     queryset = User.objects.all().order_by("username")
     permission_classes = [IsUserOrReadOnly]
     serializer_class = UserSerializer
@@ -17,10 +18,12 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ["username", "country"]
 
     def create(self, request, *args, **kwargs):
+        """A new user should be created using register."""
         return Response({"detail": "Use register."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class RegistrationAPI(generics.CreateAPIView):
+    """API endpoint that allows new Users to be created."""
     authentication_classes = []
     serializer_class = UserSerializer
 
@@ -36,6 +39,7 @@ class RegistrationAPI(generics.CreateAPIView):
 
 
 class LoginAPI(generics.GenericAPIView):
+    """API endpoint that allows users to be authenticated."""
     authentication_classes = []
     serializer_class = LoginUserSerializer
 
@@ -50,6 +54,8 @@ class LoginAPI(generics.GenericAPIView):
 
 
 class SongAlbumMixin:
+    """Functionalities that are common between songs and albums"""
+    
     def perform_create(self, serializer):
         """Automatically add the current user to the list of artists"""
         entity_instance = serializer.save()
@@ -82,9 +88,8 @@ class SongAlbumMixin:
     
 
 class SongViewSet(SongAlbumMixin, viewsets.ModelViewSet):
-    """
-    API endpoint that allows Songs to be viewed or edited.
-    """
+    """API endpoint that allows Songs to be viewed or edited."""
+
     queryset = Song.objects.all().order_by("-release_date")
     serializer_class = SongSerializer
     permission_classes = [IsArtistOrReadOnly]
@@ -93,9 +98,8 @@ class SongViewSet(SongAlbumMixin, viewsets.ModelViewSet):
 
 
 class AlbumViewSet(SongAlbumMixin, viewsets.ModelViewSet):
-    """
-    API endpoint that allows Albums to be viewed or edited.
-    """
+    """API endpoint that allows Albums to be viewed or edited."""
+
     queryset = Album.objects.all().order_by("-release_date")
     serializer_class = AlbumSerializer
     permission_classes = [IsArtistOrReadOnly]
@@ -104,9 +108,8 @@ class AlbumViewSet(SongAlbumMixin, viewsets.ModelViewSet):
 
 
 class PlaylistViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows Playlists to be viewed or edited.
-    """
+    """API endpoint that allows Playlists to be viewed or edited."""
+
     serializer_class = PlaylistSerializer
     permission_classes = [IsPlaylistOwner]
     filter_backends = [filters.SearchFilter]

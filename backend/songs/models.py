@@ -4,10 +4,12 @@ from django_countries.fields import CountryField
 from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
 from django.db import models
 
+
 GENRE_CHOICES = ["rap", "pop", "rock"]
 
 
 class User(AbstractUser):
+    """Model for a user, who can create playlists and also be associated with songs/albums and thus be an artist."""
     birth_date = models.DateField(null=True, blank=True, validators=[MaxValueValidator(limit_value=date.today)])
     country = CountryField(null=True, blank=True)
 
@@ -15,6 +17,7 @@ class User(AbstractUser):
         return self.username
 
     def delete(self, using=None, keep_parents=False):
+        """Soft delete a user"""
         self.is_active = False
         self.save(using=using)
 
@@ -26,9 +29,11 @@ class User(AbstractUser):
 
 
 class Album(models.Model):
+    """Music album model that can be associated with many artists and contain many songs"""
     title = models.CharField(max_length=255)
     # for artists blank=true because request.user is added to the artists in the view after the song is created
     artists = models.ManyToManyField(User, related_name="albums", blank=True)
+    # users that have been requested to be added to the artists list and are yet to confirm
     requested_artists = models.ManyToManyField(User, related_name="albums_requested_artist", blank=True)
     release_date = models.DateField(null=True, blank=True, default=date.today, validators=[
                                     MaxValueValidator(limit_value=date.today)])
@@ -40,11 +45,12 @@ class Album(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=["title"]),
-            # indexes on artists are being automatically created
+            # indexes on artists are created automatically
         ]
 
 
 class Song(models.Model):
+    """Song model that can be associated with many artists and 0 or 1 albums"""
     title = models.CharField(max_length=255)
     audio_file = models.FileField(upload_to="songs/audio_files", 
                                   validators=[FileExtensionValidator(allowed_extensions=["mp3", "wav", "ogg"])])
@@ -52,12 +58,14 @@ class Song(models.Model):
                                     MaxValueValidator(limit_value=date.today)])
     # for artists blank=true because request.user is added to the artists in the view after the song is created
     artists = models.ManyToManyField(User, related_name="songs", blank=True)
+    # users that have been requested to be added to the artists list and are yet to confirm
     requested_artists = models.ManyToManyField(User, related_name="songs_requested_artist", blank=True)
     genre = models.CharField(max_length=20, blank=True, null=True, choices=[(g, g) for g in GENRE_CHOICES])
     album = models.ForeignKey(Album, blank=True, null=True, on_delete=models.SET_NULL, related_name="songs")
-    # I put this validator so that i get a http response instead of integrity error
-    duration = models.PositiveIntegerField(blank=True, null=True, validators=[MinValueValidator(0)])
+    # The song number in the album
     track_number = models.PositiveIntegerField(blank=True, null=True, validators=[MinValueValidator(1)])
+    # I put the following validator so that i get a http response instead of integrity error
+    duration = models.PositiveIntegerField(blank=True, null=True, validators=[MinValueValidator(0)])
     cover_image = models.ImageField(upload_to="songs/images", blank=True, null=True)
 
     def __str__(self):
@@ -67,11 +75,12 @@ class Song(models.Model):
         indexes = [
             models.Index(fields=["title"]),
             models.Index(fields=["album"]),
-            # indexes on artists are being automatically created
+            # indexes on artists are created automatically
         ]
 
 
 class Playlist(models.Model):
+    """Music playlist model that is owned by a user and can contain many songs."""
     title = models.CharField(max_length=255)
     songs = models.ManyToManyField(Song, related_name="playlists", blank=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="playlists")

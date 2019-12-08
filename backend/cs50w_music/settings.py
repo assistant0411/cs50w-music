@@ -55,7 +55,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "songs.notifications_middleware.NotificationsMiddleware"
+    "songs.notifications_middleware.NotificationsMiddleware"  # Needed to authenticate user via knox token when calling django-notifications APIs
 ]
 
 CORS_ALLOWED_ORIGINS = [
