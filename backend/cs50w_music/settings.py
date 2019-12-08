@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django_countries',
     'knox',
     'corsheaders',
+    'notifications',
     'django_cleanup.apps.CleanupConfig', # Automatically delete files for FileField. Needs to be last in the installed apps list.
 ]
 
@@ -53,7 +54,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'corsheaders.middleware.CorsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "songs.notifications_middleware.NotificationsMiddleware"
 ]
 
 CORS_ALLOWED_ORIGINS = [
@@ -135,7 +137,10 @@ STATIC_URL = "/static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': ('knox.auth.TokenAuthentication', 'rest_framework.authentication.SessionAuthentication'),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'knox.auth.TokenAuthentication', 
+        'rest_framework.authentication.SessionAuthentication'  # needed by the browseable api
+    ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_THROTTLE_CLASSES': [

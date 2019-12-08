@@ -5,6 +5,7 @@ from django_countries.serializers import CountryFieldMixin
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password as django_contrib_validate_password
 from django.contrib.auth.hashers import check_password
+from notifications.models import Notification
 
 
 class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
@@ -99,3 +100,9 @@ class PlaylistSerializer(serializers.ModelSerializer):
         model = Playlist
         fields = '__all__'
         extra_kwargs = {'owner': {'read_only': True}}
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = '__all__'
