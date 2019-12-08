@@ -5,6 +5,7 @@ My final project for CS50w - knockoff Spotify - a web application built with Dja
 What makes this app unique is that a song/album can be associated with and managed by multiple artist profiles.
 
 backend is sort of complete  
+static files are served from media in development; CDN server would be more appropriate in production  
 frontend is WIP
 
 ## setup  
@@ -50,7 +51,7 @@ Modify details of a specific user.
     * country
 
 * DELETE users/{id}/  
-Set the a specific user as inactive.
+Set the a specific user as inactive - soft delete.
 
 Django knox token authentication:
 
@@ -90,7 +91,7 @@ Create a new album.
     * **title**   
     * release_date  
     
-    The current user is added in the artists list.
+    The current user is automcatically added to the artists list.
 
 * PATCH albums/{id}/  
 Update details of a specific album.
@@ -101,11 +102,11 @@ Update details of a specific album.
 * DELETE albums/{id}/  
 Delete a specific album.
 
-* POST albums/{id}/request_artist/  
+* POST albums/{id}/manage_requested_artists/  
 Request to add an artist to the list of artists associated with an album.
     * **aritst_id**
 
-* DELETE albums/{id}/remove_requested_artist/  
+* DELETE albums/{id}/manage_requested_artists/  
 Remove an artist from requested artists.
     * **aritst_id**
 
@@ -115,9 +116,6 @@ Confirm to be added as an artist to the list of artists associated with an album
 * DELETE albums/{id}/remove_current_user_as_artist/  
 Remove current user from the list of artists associated with an album.
 
-* GET albums/{id}/get_image/  
-Stream the cover image file of an album.  
-(unused) (instead serve static files from media in development; CDN would be more appropriate in production)
 
 ### Song Endpoints
 * GET songs/  
@@ -146,11 +144,11 @@ Update details of a specific song.
 * DELETE songs/{id}/  
 Delete a specific song.
 
-* POST songs/{id}/request_artist/  
+* POST songs/{id}/manage_requested_artists/  
 Request to add an artist to the list of artists associated with a song.
     * **aritst_id**
 
-* DELETE songs/{id}/remove_requested_artist/  
+* DELETE songs/{id}/manage_requested_artists/  
 Remove an artist from requested artists.
     * **aritst_id**
 
@@ -159,14 +157,6 @@ Confirm to be added as an artist to the list of artists associated with a song.
 
 * DELETE songs/{id}/remove_current_user_as_artist/  
 Remove current user from the list of artists associated with a song.
-
-* GET songs/{id}/play/  
-Stream the audio file of a song.  
-(unused) (instead serve static files from media in development; CDN would be more appropriate in production)
-
-* GET songs/{id}/get_image/  
-Stream the cover image file of a song.  
-(unused) (instead serve static files from media in development; CDN would be more appropriate in production)
 
 
 ### Playlist Endpoints

@@ -1,35 +1,34 @@
-from rest_framework import viewsets, generics
-from django.http import FileResponse
-from .models import User, Song, Playlist, Album
-from .serializers import UserSerializer, LoginUserSerializer, SongSerializer, PlaylistSerializer, AlbumSerializer, NotificationSerializer
-from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from .helpers import add_artist_to_requested, remove_artist_from_requested, confirm_user_as_artist, remove_user_as_artist, add_song_to_playlist, remove_song_from_playlist
 from knox.models import AuthToken
-from rest_framework import filters
+from .models import User, Song, Playlist, Album
 from .permissions import IsArtistOrReadOnly, IsPlaylistOwner, IsUserOrReadOnly, IsRequestedArtist
-from rest_framework import status
+from rest_framework import viewsets, generics, filters, status
 from rest_framework.decorators import action
-from notifications.signals import notify
+from rest_framework.response import Response
+from .serializers import UserSerializer, LoginUserSerializer, SongSerializer, PlaylistSerializer, AlbumSerializer, NotificationSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all().order_by('username')
-    permission_classes = [IsUserOrReadOnly,]
+    queryset = User.objects.all().order_by("username")
+    permission_classes = [IsUserOrReadOnly]
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['username', 'country']
+    search_fields = ["username", "country"]
 
     def create(self, request, *args, **kwargs):
-        return Response({"detail": "Method Not Allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response({"detail": "Use register."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class RegistrationAPI(generics.GenericAPIView):
+class RegistrationAPI(generics.CreateAPIView):
     authentication_classes = []
     serializer_class = UserSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        serializer.validated_data.pop("password_confirmation", None)
+        user = User.objects.create_user(**serializer.validated_data)
         return Response({
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
             "token": AuthToken.objects.create(user)[1]
@@ -48,104 +47,60 @@ class LoginAPI(generics.GenericAPIView):
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
             "token": AuthToken.objects.create(user)[1]
         })
-    
+
 
 class SongAlbumMixin:
     def perform_create(self, serializer):
-        """Add the current user to the list of artists"""
+        """Automatically add the current user to the list of artists"""
         entity_instance = serializer.save()
         entity_instance.artists.add(self.request.user)
 
-    @action(detail=True, methods=['delete'])
-    def remove_current_user_as_artist(self, request, pk=None):
-        """Remove current user from the artists list"""
+    @action(detail=True, methods=["post", "delete"])
+    def manage_requested_artists(self, request, pk=None):
+        """Add/remove an artist to/from requested artists."""
         entity = self.get_object()
-        entity.artists.remove(self.request.user)
-        return Response({'detail': 'You have successfully been removed from the artists list.'})
-
-    @action(detail=True, methods=['post'])
-    def request_artist(self, request, pk=None):
-        """Request to add a user to the artists list"""
-        entity = self.get_object()
-        artist_id = request.data.get('artist_id', None)
-
-        try:
-            artist = User.objects.get(pk=artist_id)
-        except User.DoesNotExist:
-            return Response({'artist_id': 'Invalid artist.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        entity.requested_artists.add(artist)
-
-        verb = f'{request.user} requested to add you as an artist of {entity}'
-        notify.send(request.user, recipient=artist, verb=verb, target=entity, public=False)
-        
-        return Response({'detail': 'Artist requested successfully.'})
+        artist_id = request.data.get("artist_id")
+        if artist_id is None:
+            return Response({"detail": "artist_id is required."}, status=status.HTTP_400_BAD_REQUEST)
     
-    @action(detail=True, methods=['delete'])
-    def remove_requested_artist(self, request, pk=None):
-        """Remove an artist from requested artists."""
-        entity = self.get_object()
-        artist_id = request.data.get('artist_id', None)
+        artist = get_object_or_404(User, pk=artist_id)
 
-        try:
-            artist = User.objects.get(pk=artist_id)
-        except User.DoesNotExist:
-            return Response({'artist_id': 'Invalid artist.'}, status=status.HTTP_400_BAD_REQUEST)
+        if request.method == "POST":
+            return add_artist_to_requested(entity, artist, request.user)
+        else:
+            return remove_artist_from_requested(entity, artist, request.user)
 
-        entity.requested_artists.remove(artist)
-
-        verb = f'{request.user} canceled the request to add you as an artist of {entity}'
-        notify.send(request.user, recipient=artist, verb=verb, target=entity, public=False)
-
-        return Response({'detail': 'Artist successfully removed from requested artists.'})
-
-    @action(detail=True, methods=['post'], permission_classes=[IsRequestedArtist])
+    @action(detail=True, methods=["post"], permission_classes=[IsRequestedArtist])
     def confirm_current_user_as_artist(self, request, pk=None):
         """Add the current user to the artists list if they are in requested artists."""
-        entity = self.get_object()
-        entity.artists.add(request.user)
-        entity.requested_artists.remove(request.user)
-
-        verb = f'{request.user.username} confirmed the request to be added an artist of {entity}'
-        for artist in entity.artists.exclude(pk=request.user.id):
-            notify.send(request.user, recipient=artist, verb=verb, target=entity, public=False)
-
-        return Response({'detail': 'You hve successfully been added as an artist.'})
+        return confirm_user_as_artist(self.get_object(), request.user)
     
-    @action(detail=True, methods=['get'])
-    def get_image(self, request, pk=None):
-        entity = self.get_object()
-
-        if entity.cover_image:
-            return FileResponse(entity.cover_image, 'image/*')
-        else:
-            return Response({'detail': 'Image not found'}, status=404)
+    @action(detail=True, methods=["delete"])
+    def remove_current_user_as_artist(self, request, pk=None):
+        """Remove current user from the artists list"""
+        return remove_user_as_artist(self.get_object(), request.user)
+    
 
 class SongViewSet(SongAlbumMixin, viewsets.ModelViewSet):
     """
     API endpoint that allows Songs to be viewed or edited.
     """
-    queryset = Song.objects.all().order_by('-release_date')
+    queryset = Song.objects.all().order_by("-release_date")
     serializer_class = SongSerializer
-    permission_classes = [IsArtistOrReadOnly,]
+    permission_classes = [IsArtistOrReadOnly]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title', 'artists']
-
-    @action(detail=True, methods=['get'])
-    def play(self, request, pk=None):
-        song = self.get_object()
-        return FileResponse(song.audio_file, content_type='audio/mpeg')
+    search_fields = ["title", "artists"]
 
 
 class AlbumViewSet(SongAlbumMixin, viewsets.ModelViewSet):
     """
     API endpoint that allows Albums to be viewed or edited.
     """
-    queryset = Album.objects.all().order_by('-release_date')
+    queryset = Album.objects.all().order_by("-release_date")
     serializer_class = AlbumSerializer
-    permission_classes = [IsArtistOrReadOnly, ]
+    permission_classes = [IsArtistOrReadOnly]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title', 'artists']
+    search_fields = ["title", "artists"]
 
 
 class PlaylistViewSet(viewsets.ModelViewSet):
@@ -153,33 +108,28 @@ class PlaylistViewSet(viewsets.ModelViewSet):
     API endpoint that allows Playlists to be viewed or edited.
     """
     serializer_class = PlaylistSerializer
-    permission_classes = [IsPlaylistOwner, ]
+    permission_classes = [IsPlaylistOwner]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title',]
+    search_fields = ["title"]
 
     def get_queryset(self):
-        return Playlist.objects.filter(owner=self.request.user).order_by('-created_at')
+        return Playlist.objects.filter(owner=self.request.user).order_by("-created_at")
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    @action(detail=True, methods=['post', 'delete'])
+    @action(detail=True, methods=["post", "delete"])
     def manage_songs(self, request, pk=None):
-        """Add or remove a song to/from a playlist."""
+        """Add/remove a song to/from a playlist."""
 
         playlist = self.get_object()
-        song_id = request.data.get('song_id', None)
+        song_id = request.data.get("song_id")
+        if song_id is None:
+            return Response({"detail": "song_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        song = get_object_or_404(Song, pk=song_id)
 
-        try:    
-            song = Song.objects.get(pk=song_id)
-        except Song.DoesNotExist:
-            return Response({'detail': 'Invalid song_id.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if request.method == 'POST':
-            playlist.songs.add(song)
-            message = 'Song added successfully.'
-        elif request.method == 'DELETE':
-            playlist.songs.remove(song)
-            message = 'Song removed successfully.'
-
-        return Response({'detail': message})
+        if request.method == "POST":
+            return add_song_to_playlist(playlist, song)
+        else:
+            return remove_song_from_playlist(playlist, song)
