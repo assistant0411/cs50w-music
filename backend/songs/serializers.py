@@ -1,4 +1,3 @@
-from django.utils import timezone
 from rest_framework import serializers
 from .models import User, Song, Playlist, Album
 from django_countries.serializers import CountryFieldMixin
@@ -21,10 +20,12 @@ class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
 
     # so that the raised error is not non_field_errors
     def validate_password(self, password):
+        """Validate password is not too short or too common."""
         django_contrib_validate_password(password)
         return password
 
     def validate(self, data):
+        """Validate that password confirmation matches password"""
         password = data.get('password')
         password_confirmation = data.get('password_confirmation')
 
@@ -34,22 +35,9 @@ class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
             )
 
         return data
-    
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        """Exclude email for other users"""
-
-        if self.context['request'].user != instance:
-            del representation['email']
-
-        return representation
-
-    def create(self, validated_data):
-        validated_data.pop('password_confirmation')
-        user = User.objects.create_user(**validated_data)
-        return user
         
     def update(self, instance, validated_data):
+        """Validate that old_password matches the current user password when changing password."""
         password = validated_data.get('password')
         old_password = validated_data.get('old_password')
 
@@ -57,6 +45,15 @@ class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
             raise serializers.ValidationError({"old_password": "Old password is incorrect."})
 
         return super().update(instance, validated_data)
+    
+    def to_representation(self, instance):
+        """Exclude email for other users"""
+        representation = super().to_representation(instance)
+
+        if self.context['request'].user != instance:
+            representation.pop('email')
+
+        return representation
     
 
 class LoginUserSerializer(serializers.Serializer):
