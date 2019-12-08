@@ -3,11 +3,11 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password as django_contrib_validate_password
 from django.contrib.auth.hashers import check_password
 from .models import User, Song, Playlist, Album
-from notifications.models import Notification
 from rest_framework import serializers
 
 
 class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
+    """Serializer for user register and user get, update"""
     password_confirmation = serializers.CharField(write_only=True, required=True)
     old_password = serializers.CharField(write_only=True, required=False)
     
@@ -63,6 +63,7 @@ class LoginUserSerializer(serializers.Serializer):
     password = serializers.CharField()
 
     def validate(self, data):
+        """Validate username and password are correct"""
         user = authenticate(**data)
         if user and user.is_active:
             return user
@@ -78,7 +79,7 @@ class SongSerializer(serializers.ModelSerializer):
         }
 
     def validate_album(self, album):
-        # Check if the user is an artist of the album
+        """Check if the user is an artist of the album that they try to add the song to"""
         if self.context["request"].user not in album.artists.all():
             raise serializers.ValidationError("You must be an artist of the album to add a song to it.")
         
@@ -99,9 +100,3 @@ class PlaylistSerializer(serializers.ModelSerializer):
         model = Playlist
         fields = "__all__"
         extra_kwargs = {"owner": {"read_only": True}}
-
-
-class NotificationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Notification
-        fields = "__all__"

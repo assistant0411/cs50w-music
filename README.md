@@ -27,18 +27,18 @@ Run these in separate terminals
 http://127.0.0.1:3000/  
 
 ## API Endpoints  
-base url http://127.0.0.1:8000/api/  
+base url http://127.0.0.1:8000/ 
 
 Authorization and api rate limiting are set for security measures.  
 
 ### User Endpoints  
-* GET users/  
+* GET api/users  
 Retrieve a list of all users.  
 
-* GET users/{id}/  
+* GET api/users{id}/  
 Retrieve details of a specific user.  
 
-* PATCH users/{id}/  
+* PATCH api/users{id}/  
 Modify details of a specific user. 
     * username  
     * old_password (required when changing the password)
@@ -50,12 +50,12 @@ Modify details of a specific user.
     * birth_date  
     * country
 
-* DELETE users/{id}/  
+* DELETE api/users{id}/  
 Set the a specific user as inactive - soft delete.
 
 Django knox token authentication:
 
-* POST register/  
+* POST api/register/  
 Register a new user and obtain an authentication token.
     * **username**  
     * **password**  
@@ -68,63 +68,63 @@ Register a new user and obtain an authentication token.
 
     The response contains the authentication token.
 
-* POST login/  
+* POST api/login/  
 Log in and obtain an authentication token.  
     * **username**  
     * **password**  
 
-* POST logout/
+* POST api/logout/
 Log out the current user.
 
-* POST logoutall/  
+* POST api/logoutall/  
 Remove all tokens that the server has - forcing all clients to re-authenticate
 
 ### Album Endpoints
-* GET albums/  
+* GET api/albums/  
 Retrieve a list of all albums.
 
-* GET albums/{id}/  
+* GET api/albums/{id}/  
 Retrieve details of a specific album.
 
-* POST albums/  
+* POST api/albums/  
 Create a new album.
     * **title**   
     * release_date  
     
     The current user is automcatically added to the artists list.
 
-* PATCH albums/{id}/  
+* PATCH api/albums/{id}/  
 Update details of a specific album.
     * title
     * release_date
     * cover_image
 
-* DELETE albums/{id}/  
+* DELETE api/albums/{id}/  
 Delete a specific album.
 
-* POST albums/{id}/manage_requested_artists/  
+* POST api/albums/{id}/manage_requested_artists/  
 Request to add an artist to the list of artists associated with an album.
     * **aritst_id**
 
-* DELETE albums/{id}/manage_requested_artists/  
+* DELETE api/albums/{id}/manage_requested_artists/  
 Remove an artist from requested artists.
     * **aritst_id**
 
-* POST albums/{id}/confirm_current_user_as_artist/  
+* POST api/albums/{id}/confirm_current_user_as_artist/  
 Confirm to be added as an artist to the list of artists associated with an album.
 
-* DELETE albums/{id}/remove_current_user_as_artist/  
+* DELETE api/albums/{id}/remove_current_user_as_artist/  
 Remove current user from the list of artists associated with an album.
 
 
 ### Song Endpoints
-* GET songs/  
+* GET api/songs/  
 Retrieve a list of all songs.
 
-* GET songs/{id}/  
+* GET api/songs/{id}/  
 Retrieve details of a specific song.
 
-* POST songs/  
+* POST api/songs/  
 Create a new song.
     * **title**  
     * **audio_file**  
@@ -138,54 +138,70 @@ Create a new song.
     The current user is added in the artists list.
 
 
-* PATCH songs/{id}/  
+* PATCH api/songs/{id}/  
 Update details of a specific song.
 
-* DELETE songs/{id}/  
+* DELETE api/songs/{id}/  
 Delete a specific song.
 
-* POST songs/{id}/manage_requested_artists/  
+* POST api/songs/{id}/manage_requested_artists/  
 Request to add an artist to the list of artists associated with a song.
     * **aritst_id**
 
-* DELETE songs/{id}/manage_requested_artists/  
+* DELETE api/songs/{id}/manage_requested_artists/  
 Remove an artist from requested artists.
     * **aritst_id**
 
-* POST songs/{id}/confirm_current_user_as_artist/  
+* POST api/songs/{id}/confirm_current_user_as_artist/  
 Confirm to be added as an artist to the list of artists associated with a song.
 
-* DELETE songs/{id}/remove_current_user_as_artist/  
+* DELETE api/songs/{id}/remove_current_user_as_artist/  
 Remove current user from the list of artists associated with a song.
 
 
 ### Playlist Endpoints
-* GET playlists/  
+* GET api/playlists/  
 Retrieve a list of all playlists.
 
-* GET playlists/{id}/  
+* GET api/playlists/{id}/  
 Retrieve details of a specific playlist.
 
-* POST playlists/  
+* POST api/playlists/  
 Create a new playlist.
     * **title**
 
     The current user is set as the owner of the playlist and the timestamp created_at is set to now.
 
-* PATCH playlists/{id}/  
+* PATCH api/playlists/{id}/  
 Update details of a specific playlist.
     * title
 
-* DELETE playlists/{id}/  
+* DELETE api/playlists/{id}/  
 Delete a specific playlist.
 
-* POST playlists/{id}/manage_songs/  
+* POST api/playlists/{id}/manage_songs/  
 Add a song to a playlist.
     * **song_id**
 
-* DELETE playlists/{id}/manage_songs/  
+* DELETE api/playlists/{id}/manage_songs/  
 Remove a song from a playlist.
     * **song_id**
+
+
+### Notification Endpoints (django-notifications app)
+* GET notifications/api/all_list/  
+List all unread notifications
+    * max  
+    * mark_as_read
+
+* GET notifications/api/unread_list
+List all notifications
+    * max  
+    * mark_as_read
+
+* GET notifications/api/unread_count/
+Get the count of the unread notifications
+
 
 ## Testing - CI
 **.github/workflows/ci.yml** The github action workflow, triggered on push events, runs Django unit tests for the project, ensuring seamless and automated testing.  

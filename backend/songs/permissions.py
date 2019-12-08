@@ -7,7 +7,7 @@ class IsArtistOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Deny permission for editing or deleting if the user is not the owner.
+        # Deny permission for editing or deleting if the user is not in the artists list.
         return request.user in obj.artists.all()
 
 
@@ -19,6 +19,7 @@ class IsPlaylistOwner(permissions.BasePermission):
 
 class IsRequestedArtist(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
+        # Deny permission if the user is not in the requested artists list
         return request.user in obj.requested_artists.all()
     
 
