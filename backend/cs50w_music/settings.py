@@ -37,13 +37,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'rest_framework',
-    'songs',
-    'django_countries',
-    'knox',
-    'corsheaders',
-    'notifications',
-    'django_cleanup.apps.CleanupConfig', # Automatically delete files for FileField. Needs to be last in the installed apps list.
+    "rest_framework",
+    "songs",
+    "django_countries",
+    "knox",
+    "corsheaders",
+    "notifications",
+    "django_cleanup.apps.CleanupConfig",  # Automatically delete files for FileField. Needs to be last in the installed apps list.
 ]
 
 MIDDLEWARE = [
@@ -137,23 +137,23 @@ STATIC_URL = "/static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'knox.auth.TokenAuthentication', 
-        'rest_framework.authentication.SessionAuthentication'  # needed by the browseable api
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "knox.auth.TokenAuthentication", 
+        "rest_framework.authentication.SessionAuthentication"  # needed by the browseable api
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle"
     ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '10/minute',
-        'user': '100/minute'
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "10/minute",
+        "user": "100/minute"
     },
 }
 
 MEDIA_ROOT = BASE_DIR / "media"  # directory where media files are stored
-MEDIA_URL = '/media/'
+MEDIA_URL = "/media/"
 
-AUTH_USER_MODEL = 'songs.User'
+AUTH_USER_MODEL = "songs.User"
