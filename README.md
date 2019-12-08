@@ -205,5 +205,5 @@ Get the count of the unread notifications
 
 ## Testing - CI
 **.github/workflows/ci.yml** The github action workflow, triggered on push events, runs Django unit tests for the project, ensuring seamless and automated testing.  
-`cd backend`
+`cd backend`  
 `python3 manage.py test --settings=cs50w_music.settings_test`
