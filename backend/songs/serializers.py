@@ -37,6 +37,11 @@ class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
             )
 
         return data
+
+    def create(self, validated_data):
+        validated_data.pop('password_confirmation')
+        user = User.objects.create_user(**validated_data)
+        return user
         
     def update(self, instance, validated_data):
         """Validate that old_password matches the current user password when changing password."""
@@ -50,12 +55,12 @@ class UserSerializer(CountryFieldMixin, serializers.ModelSerializer):
     
     def to_representation(self, instance):
         """Exclude email for other users"""
-        representation = super().to_representation(instance)
+        ret = super().to_representation(instance)
 
         if self.context["request"].user != instance:
-            representation.pop("email")
+            ret.pop("email")
 
-        return representation
+        return ret
     
 
 class LoginUserSerializer(serializers.Serializer):

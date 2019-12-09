@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import check_password
 from django.shortcuts import get_object_or_404
 from .helpers import add_artist_to_requested, remove_artist_from_requested, confirm_user_as_artist, remove_user_as_artist, add_song_to_playlist, remove_song_from_playlist
 from knox.models import AuthToken
@@ -11,6 +12,7 @@ from .serializers import UserSerializer, LoginUserSerializer, SongSerializer, Pl
 
 class UserViewSet(viewsets.ModelViewSet):
     """API endpoint that allows Users to be viewed or edited."""
+
     queryset = User.objects.all().order_by("username")
     permission_classes = [IsUserOrReadOnly]
     serializer_class = UserSerializer
@@ -20,18 +22,25 @@ class UserViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """A new user should be created using register."""
         return Response({"detail": "Use register."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    def destroy(self, request, *args, **kwargs):
+        """Soft delete the user"""
+        user = self.get_object()
+        user.is_active = False
+        user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class RegistrationAPI(generics.CreateAPIView):
+class RegistrationAPI(generics.GenericAPIView):
     """API endpoint that allows new Users to be created."""
+
     authentication_classes = []
     serializer_class = UserSerializer
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.validated_data.pop("password_confirmation", None)
-        user = User.objects.create_user(**serializer.validated_data)
+        user = serializer.save()
         return Response({
             "user": UserSerializer(user, context=self.get_serializer_context()).data,
             "token": AuthToken.objects.create(user)[1]
@@ -40,6 +49,7 @@ class RegistrationAPI(generics.CreateAPIView):
 
 class LoginAPI(generics.GenericAPIView):
     """API endpoint that allows users to be authenticated."""
+
     authentication_classes = []
     serializer_class = LoginUserSerializer
 
@@ -67,7 +77,7 @@ class SongAlbumMixin:
         entity = self.get_object()
         artist_id = request.data.get("artist_id")
         if artist_id is None:
-            return Response({"detail": "artist_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"artist_id": "This field is required."}, status=status.HTTP_400_BAD_REQUEST)
     
         artist = get_object_or_404(User, pk=artist_id)
 
@@ -119,6 +129,7 @@ class PlaylistViewSet(viewsets.ModelViewSet):
         return Playlist.objects.filter(owner=self.request.user).order_by("-created_at")
 
     def perform_create(self, serializer):
+        """Set the user as the owner of the playlist"""
         serializer.save(owner=self.request.user)
 
     @action(detail=True, methods=["post", "delete"])
@@ -128,7 +139,7 @@ class PlaylistViewSet(viewsets.ModelViewSet):
         playlist = self.get_object()
         song_id = request.data.get("song_id")
         if song_id is None:
-            return Response({"detail": "song_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"song_id": "This field is required."}, status=status.HTTP_400_BAD_REQUEST)
         
         song = get_object_or_404(Song, pk=song_id)
 

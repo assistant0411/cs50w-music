@@ -16,11 +16,6 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-    def delete(self, using=None, keep_parents=False):
-        """Soft delete a user"""
-        self.is_active = False
-        self.save(using=using)
-
     class Meta:
         indexes = [
             models.Index(fields=["username"]),
