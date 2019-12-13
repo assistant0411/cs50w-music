@@ -12,9 +12,12 @@ import Menu from '@mui/material/Menu';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import AccountCircle from '@mui/icons-material/AccountCircle';
-import MailIcon from '@mui/icons-material/Mail';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MoreIcon from '@mui/icons-material/MoreVert';
+import Link from '@mui/material/Link';
+import SignOutMenuItem from './SignOutMenuItem';
+import styles from './Navbar.css';
+
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -56,7 +59,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-export default function PrimarySearchAppBar() {
+export default function Navbar({ isAuth, setIsAuth }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = React.useState(null);
@@ -100,7 +103,7 @@ export default function PrimarySearchAppBar() {
   };
 
   const menuId = 'primary-search-account-menu';
-  const renderMenu = (
+  const renderUserMenu = (
     <Menu
       anchorEl={anchorEl}
       anchorOrigin={{
@@ -118,6 +121,7 @@ export default function PrimarySearchAppBar() {
     >
       <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
       <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      <SignOutMenuItem setIsAuth={setIsAuth}/>
     </Menu>
   );
 
@@ -214,7 +218,7 @@ export default function PrimarySearchAppBar() {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          <IconButton
+          {isAuth && (<IconButton
             size="large"
             edge="start"
             color="inherit"
@@ -223,15 +227,17 @@ export default function PrimarySearchAppBar() {
             onClick={handleMainMenuOpen}
           >
             <MenuIcon />
-          </IconButton>
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{ display: { xs: 'none', sm: 'block' } }}
-          >
-            CS50wMusic
-          </Typography>
+          </IconButton>)}
+          <Link href="/" underline="none" color="inherit" variant="h6">
+            <Typography
+              variant="h6"
+              noWrap
+              component="div"
+              sx={{ display: { xs: 'none', sm: 'block' } }}
+            >
+              CS50wMusic
+            </Typography>
+          </Link>
           <Search>
             <SearchIconWrapper>
               <SearchIcon />
@@ -242,6 +248,7 @@ export default function PrimarySearchAppBar() {
             />
           </Search>
           <Box sx={{ flexGrow: 1 }} />
+          {isAuth && (<>
           <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
             <IconButton
               size="large"
@@ -277,12 +284,20 @@ export default function PrimarySearchAppBar() {
               <MoreIcon />
             </IconButton>
           </Box>
+          </> )}
+          {!isAuth && (
+            <Link href="/login" variant="body2" id="custom_link">
+              Sign in
+            </Link>
+          )}
         </Toolbar>
       </AppBar>
-      {renderMobileMenu}
-      {renderMenu}
-      {renderNotificationsMenu}
+      {isAuth && (<>
       {renderMainMenu}
+      {renderMobileMenu}
+      {renderNotificationsMenu}
+      {renderUserMenu}
+      </>)}
     </Box>
   );
 }

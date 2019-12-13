@@ -12,7 +12,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 
-const SignIn = () => {
+const SignIn = ({ setIsAuth }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -31,6 +31,7 @@ const SignIn = () => {
       setIsLoading(true);
       const response = await axiosInstance.post('login/', form);
       localStorage.setItem('token', response.data.token);
+      setIsAuth(true)
       navigate('/');
     } catch (error) {
       setError(error.response?.data?.non_field_errors !== undefined ? error.response.data.non_field_errors : error.message);
@@ -91,10 +92,15 @@ const SignIn = () => {
           >
             {isLoading ? 'Signing In...' : 'Sign In'}
           </Button>
-          <Grid container>
+          <Grid container direction="column">
             <Grid item>
               <Link href="/register" variant="body2">
                 {"Don't have an account? Sign Up"}
+              </Link>
+            </Grid>
+            <Grid item>
+              <Link href="/" variant="body2">
+                Continue without registration
               </Link>
             </Grid>
           </Grid>

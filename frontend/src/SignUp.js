@@ -18,7 +18,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 const defaultTheme = createTheme();
 
-export default function SignUp() {
+export default function SignUp({setIsAuth}) {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -37,6 +37,7 @@ export default function SignUp() {
       setIsLoading(true);
       const response = await axiosInstance.post('register/', form);
       localStorage.setItem('token', response.data.token);
+      setIsAuth(true)
       navigate('/');
     } catch (error) {
       handleErrors(error);
@@ -189,10 +190,15 @@ export default function SignUp() {
               >
                 {isLoading ? 'Signing Up...' : 'Sign Up'}
             </Button>
-            <Grid container justifyContent="flex-end">
+            <Grid container direction="column">
               <Grid item>
                 <Link href="/login" variant="body2">
-                  Already have an account? Sign in
+                  {"Already have an account? Sign in"}
+                </Link>
+              </Grid>
+              <Grid item>
+                <Link href="/" variant="body2">
+                  Continue without registration
                 </Link>
               </Grid>
             </Grid>

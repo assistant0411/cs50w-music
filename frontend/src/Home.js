@@ -2,10 +2,10 @@ import React from 'react';
 import Songlist from './SongList';
 import Navbar from './Navbar';
 
-const Home = () => {
+const Home = ({ isAuth, setIsAuth }) => {
   return (
     <>
-      <Navbar />
+      <Navbar isAuth={isAuth} setIsAuth={setIsAuth}/>
       <Songlist />
     </>
   );
