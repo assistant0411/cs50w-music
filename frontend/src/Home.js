@@ -1,12 +1,12 @@
 import React from 'react';
-import Songlist from './SongList';
+import Album from './Album';
 import Navbar from './Navbar';
 
 const Home = ({ isAuth, setIsAuth }) => {
   return (
     <>
       <Navbar isAuth={isAuth} setIsAuth={setIsAuth}/>
-      <Songlist />
+      <Album />
     </>
   );
 };
