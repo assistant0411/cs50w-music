@@ -1,7 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardMedia from '@mui/material/CardMedia';
 import CssBaseline from '@mui/material/CssBaseline';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
@@ -9,8 +6,9 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import axiosInstance from './axiosInstance';
-import Link from '@mui/material/Link';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import SongCard from './SongCard';
+
 
 const defaultTheme = createTheme();
 
@@ -52,18 +50,8 @@ export default function Album() {
           }}
         >
           <Container maxWidth="sm">
-            <Typography
-              component="h1"
-              variant="h2"
-              align="center"
-              color="text.primary"
-              gutterBottom
-            >
-              Album layout
-            </Typography>
-            <Typography variant="h5" align="center" color="text.secondary" paragraph>
-              Something short and leading about the collection below—its contents,
-              the creator, etc.
+            <Typography variant="h5" align="center" color="text.primary" paragraph>
+              some text idk
             </Typography>
           </Container>
         </Box>
@@ -78,33 +66,7 @@ export default function Album() {
             <Grid container spacing={4}>
               {songs.map((song) => (
                 <Grid item key={song.id} xs={6} sm={4} md={3} lg={2}>
-                  <Link href={`/songs/${song.id}`} underline="none">
-                    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                      <CardMedia
-                        component="div"
-                        sx={{
-                          // 16:9
-                          pt: '56.25%',
-                        }}
-                        image={song.cover_image || 'https://wallpapers.com/images/featured/music-notes-zpmz2slc377qu3wd.jpg'}
-                      />
-                      <CardContent sx={{ flexGrow: 1 }}>
-                        <Typography gutterBottom variant="h5" component="h2">
-                          {song.title}
-                        </Typography>
-                        <Typography>
-                          {Object.entries(song.artists_usernames).map(([artistId, username], index, array) => (
-                            <React.Fragment key={artistId}>
-                              <Link href={`/users/${artistId}/`} variant="body2">
-                                {username}
-                              </Link>
-                              {index < array.length - 1 && ', '}
-                            </React.Fragment>
-                          ))}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                  <SongCard song={song}/>
                 </Grid>
               ))}
             </Grid>

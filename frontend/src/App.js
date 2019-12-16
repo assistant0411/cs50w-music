@@ -5,6 +5,7 @@ import SignIn from './SignIn';
 import SignUp from './SignUp';
 import Home from './Home';
 
+
 const App = () => {
   const [isAuth, setIsAuth] = useState(!!localStorage.getItem('token'));
 
