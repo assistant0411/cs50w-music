@@ -228,7 +228,6 @@ class BaseUnauthenticatedAPITest(BaseAPITest):
             "artists": [self.old_user.id],
             "genre": "pop",
             "album": self.old_album,
-            "duration": 200,
             "track_number": 1
         }
 
@@ -249,7 +248,6 @@ class BaseUnauthenticatedAPITest(BaseAPITest):
             "artists": [self.old_user.id],
             "genre": "rap",
             "album": self.old_album.id,
-            "duration": 2010,
             "track_number": 3
         }
 
@@ -501,14 +499,6 @@ class AuthSongTest(BaseAuthenticatedAPITest):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Song.objects.count(), 2)  # old_song and old_song_2
         self.assertRegex(response.json()["album"][0], r'Invalid pk ".*" - object does not exist.')
-
-    def test_fail_create_song_invalid_duration(self):
-        """Fail to create a new song with duration less than 0 seconds"""
-        self.new_song_data["duration"] = -1
-        response = self.client.post(reverse("songs:songs-list"), data=self.new_song_data, format="multipart")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(Song.objects.count(), 2)  # old_song and old_song_2
-        self.assertEqual(response.json()["duration"][0], "Ensure this value is greater than or equal to 0.")
 
     def test_fail_create_song_invalid_track_number(self):
         """Fail to create a new song whose track number is less than 1."""

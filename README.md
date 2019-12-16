@@ -131,7 +131,6 @@ Create a new song.
     * release_date  
     * genre
     * album_id
-    * duration (in seconds)
     * track_number (In the album)
     * cover_image
     
