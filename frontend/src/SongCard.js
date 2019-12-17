@@ -26,7 +26,7 @@ export default function SongCard({song}) {
                     {Object.entries(song.artists_usernames).map(([artistId, username], index, array) => (
                     <React.Fragment key={artistId}>
                         <Link href={`/users/${artistId}/`} variant="body2">
-                        {username}
+                            {username}
                         </Link>
                         {index < array.length - 1 && ', '}
                     </React.Fragment>
