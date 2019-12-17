@@ -6,9 +6,9 @@ import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 
 
-export default function SongCard({song}) {
+export default function ReleaseCard({release, releaseType}) {
     return (
-        <Link href={`/songs/${song.id}`} underline="none">
+        <Link href={`/${releaseType}s/${release.id}`} underline="none">
             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <CardMedia
                 component="div"
@@ -16,14 +16,14 @@ export default function SongCard({song}) {
                     // 16:9
                     pt: '56.25%',
                 }}
-                image={song.cover_image || 'https://wallpapers.com/images/featured/music-notes-zpmz2slc377qu3wd.jpg'}
+                image={release.cover_image || 'https://wallpapers.com/images/featured/music-notes-zpmz2slc377qu3wd.jpg'}
                 />
                 <CardContent sx={{ flexGrow: 1 }}>
                 <Typography gutterBottom variant="h5" component="h2">
-                    {song.title}
+                    {release.title}
                 </Typography>
                 <Typography>
-                    {Object.entries(song.artists_usernames).map(([artistId, username], index, array) => (
+                    {Object.entries(release.artists_usernames).map(([artistId, username], index, array) => (
                     <React.Fragment key={artistId}>
                         <Link href={`/users/${artistId}/`} variant="body2">
                             {username}

@@ -1,12 +1,12 @@
 import React from 'react';
-import Album from './Album';
+import ReleaseCardsAlbum from './ReleaseCardsAlbum';
 import Navbar from './Navbar';
 
 const Home = ({ isAuth, setIsAuth }) => {
   return (
     <>
       <Navbar isAuth={isAuth} setIsAuth={setIsAuth}/>
-      <Album />
+      <ReleaseCardsAlbum url={"/songs/"} infiniteScroll={true}/>
     </>
   );
 };

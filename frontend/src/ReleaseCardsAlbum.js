@@ -7,26 +7,36 @@ import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import axiosInstance from './axiosInstance';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import SongCard from './SongCard';
+import ReleaseCard from './ReleaseCard';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
 
 
 const defaultTheme = createTheme();
 
-export default function Album() {
-  const [songs, setSongs] = useState([]);
+export default function ReleaseCardsAlbum({url, infiniteScroll=false}) {
+  const [releases, setReleases] = useState([]);
   const [error, setError] = useState(null);
-  const [url, setUrl] = useState("/songs/");
+  const [nextUrl, setNextUrl] = useState(url);
   const isInitialMount = useRef(true);
+  const releaseType = url.startsWith("/songs") ? "song" : "album";
 
+  // Fetch data and retry if response status is 429 Too many requests
   const fetchData = async () => {
     setError(null);
 
     try {
-      const songsResponse = await axiosInstance.get(url);
-      setSongs((prevSongs) => [...prevSongs, ...songsResponse.data.results]);
-      setUrl(songsResponse.data.next);
+      const response = await axiosInstance.get(nextUrl);
+      setReleases((prevReleases) => [...prevReleases, ...response.data.results]);
+      setNextUrl(response.data.next);
     } catch (error) {
-      setError(error);
+      if (error.response && error.response.status === 429) {
+        console.warn("Rate limit exceeded. Retrying after a short delay.");
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return fetchData();
+      } else {
+        setError(error);
+      }
     }
   };
 
@@ -51,27 +61,27 @@ export default function Album() {
         >
           <Container maxWidth="sm">
             <Typography variant="h5" align="center" color="text.primary" paragraph>
-              some text idk
+              {releaseType}s
             </Typography>
           </Container>
         </Box>
         <Container sx={{ py: 8 }} maxWidth="xl">
             <InfiniteScroll
-              dataLength={songs.length}
+              dataLength={releases.length}
               next={fetchData}
-              hasMore={!!url}
-              loader={<p>Loading...</p>}
-              endMessage={<p>No more songs to load.</p>}
+              hasMore={!!nextUrl && infiniteScroll}
+              loader={<CircularProgress size={24} style={{ margin: '24px auto' }} />} // Use a spinner for a better loading indicator
+              endMessage={<p>No more {releaseType}s to load.</p>}
             >
             <Grid container spacing={4}>
-              {songs.map((song) => (
-                <Grid item key={song.id} xs={6} sm={4} md={3} lg={2}>
-                  <SongCard song={song}/>
+              {releases.map((release) => (
+                <Grid item key={release.id} xs={6} sm={4} md={3} lg={2}>
+                  <ReleaseCard release={release} releaseType={releaseType}/>
                 </Grid>
               ))}
             </Grid>
           </InfiniteScroll>
-          {error && <p>Error loading songs. Error: {error}.</p>}
+          {error && <Alert severity="error">Error loading {releaseType}s. {error}</Alert>}
         </Container>
       </main>
     </ThemeProvider>
