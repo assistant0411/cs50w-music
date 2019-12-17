@@ -73,31 +73,34 @@ class LoginUserSerializer(serializers.Serializer):
         if user and user.is_active:
             return user
         raise serializers.ValidationError("Invalid Details.")
+    
+
+class SongAlbumSerializer(serializers.ModelSerializer):
+    artists_usernames = serializers.SerializerMethodField()
+
+    def get_artists_usernames(self, obj):
+        """dictionary with artist ids and their usernames"""
+        return {artist.id: artist.username for artist in obj.artists.all()}
 
 
-class SongSerializer(serializers.ModelSerializer):
+class SongSerializer(SongAlbumSerializer):
+    
     class Meta:
         model = Song
-        exclude = ("requested_artists",)
-        extra_kwargs = {
-            "artists": {"read_only": True},
-        }
+        exclude = ("requested_artists" ,"artists")
 
     def validate_album(self, album):
         """Check if the user is an artist of the album that they try to add the song to"""
         if self.context["request"].user not in album.artists.all():
             raise serializers.ValidationError("You must be an artist of the album to add a song to it.")
-        
+    
         return album
+        
 
-
-class AlbumSerializer(serializers.ModelSerializer):
+class AlbumSerializer(SongAlbumSerializer):
     class Meta:
         model = Album
-        exclude = ("requested_artists",)
-        extra_kwargs = {
-            "artists": {"read_only": True},
-        }    
+        exclude = ("requested_artists", "artists")
 
 
 class PlaylistSerializer(serializers.ModelSerializer):

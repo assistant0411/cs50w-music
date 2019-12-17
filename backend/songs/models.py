@@ -59,8 +59,6 @@ class Song(models.Model):
     album = models.ForeignKey(Album, blank=True, null=True, on_delete=models.SET_NULL, related_name="songs")
     # The song number in the album
     track_number = models.PositiveIntegerField(blank=True, null=True, validators=[MinValueValidator(1)])
-    # I put the following validator so that i get a http response instead of integrity error
-    duration = models.PositiveIntegerField(blank=True, null=True, validators=[MinValueValidator(0)])
     cover_image = models.ImageField(upload_to="songs/images", blank=True, null=True)
 
     def __str__(self):

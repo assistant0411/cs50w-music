@@ -104,7 +104,7 @@ class SongViewSet(SongAlbumMixin, viewsets.ModelViewSet):
     serializer_class = SongSerializer
     permission_classes = [IsArtistOrReadOnly]
     filter_backends = [filters.SearchFilter]
-    search_fields = ["title", "artists"]
+    search_fields = ["title", "artists__username"]
 
 
 class AlbumViewSet(SongAlbumMixin, viewsets.ModelViewSet):
@@ -114,7 +114,7 @@ class AlbumViewSet(SongAlbumMixin, viewsets.ModelViewSet):
     serializer_class = AlbumSerializer
     permission_classes = [IsArtistOrReadOnly]
     filter_backends = [filters.SearchFilter]
-    search_fields = ["title", "artists"]
+    search_fields = ["title", "artists__username"]
 
 
 class PlaylistViewSet(viewsets.ModelViewSet):
