@@ -63,7 +63,7 @@ class LoginAPI(generics.GenericAPIView):
         })
 
 
-class SongAlbumMixin:
+class ReleaseMixin:
     """Functionalities that are common between songs and albums"""
     
     def perform_create(self, serializer):
@@ -97,7 +97,7 @@ class SongAlbumMixin:
         return remove_user_as_artist(self.get_object(), request.user)
     
 
-class SongViewSet(SongAlbumMixin, viewsets.ModelViewSet):
+class SongViewSet(ReleaseMixin, viewsets.ModelViewSet):
     """API endpoint that allows Songs to be viewed or edited."""
 
     queryset = Song.objects.all().order_by("-release_date")
@@ -107,7 +107,7 @@ class SongViewSet(SongAlbumMixin, viewsets.ModelViewSet):
     search_fields = ["title", "artists__username"]
 
 
-class AlbumViewSet(SongAlbumMixin, viewsets.ModelViewSet):
+class AlbumViewSet(ReleaseMixin, viewsets.ModelViewSet):
     """API endpoint that allows Albums to be viewed or edited."""
 
     queryset = Album.objects.all().order_by("-release_date")
