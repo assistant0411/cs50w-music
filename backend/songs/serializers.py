@@ -75,7 +75,7 @@ class LoginUserSerializer(serializers.Serializer):
         raise serializers.ValidationError("Invalid Details.")
     
 
-class SongAlbumSerializer(serializers.ModelSerializer):
+class ReleaseSerializer(serializers.ModelSerializer):
     artists_usernames = serializers.SerializerMethodField()
 
     def get_artists_usernames(self, obj):
@@ -83,7 +83,7 @@ class SongAlbumSerializer(serializers.ModelSerializer):
         return {artist.id: artist.username for artist in obj.artists.all()}
 
 
-class SongSerializer(SongAlbumSerializer):
+class SongSerializer(ReleaseSerializer):
     
     class Meta:
         model = Song
@@ -97,7 +97,7 @@ class SongSerializer(SongAlbumSerializer):
         return album
         
 
-class AlbumSerializer(SongAlbumSerializer):
+class AlbumSerializer(ReleaseSerializer):
     class Meta:
         model = Album
         exclude = ("requested_artists", "artists")
