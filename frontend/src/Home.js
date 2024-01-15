@@ -7,6 +7,7 @@ const Home = ({ isAuth, setIsAuth }) => {
     <>
       <Navbar isAuth={isAuth} setIsAuth={setIsAuth}/>
       <ReleaseCardsAlbum url={"/songs/"} infiniteScroll={true}/>
+    <ReleaseCardsAlbum url={"/songs/"} infiniteScroll={true}/>
     </>
   );
 };
